@@ -21,7 +21,6 @@ defmodule Googlenews.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:timex, "~> 3.0"},
       # {:req, "~> 0.3"},
       {:req, git: "https://github.com/un3481/req.git", tag: "0.1.0"},
       {:feeder_ex, "~> 1.1"},

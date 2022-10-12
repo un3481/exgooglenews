@@ -4,6 +4,7 @@ defmodule Googlenews do
   """
 
   @base_url "https://news.google.com/rss"
+  # @unsupported "https://news.google.com/rss/unsupported"
 
   @default_options [lang: "en", country: "US"]
 
@@ -17,8 +18,6 @@ defmodule Googlenews do
     "SPORTS",
     "HEALTH"
   ]
-
-  # @unsupported "https://news.google.com/rss/unsupported"
 
   @typedoc """
   Proxy configuration for Mint package.
@@ -49,11 +48,26 @@ defmodule Googlenews do
   defp from_to_helper(validate) when is_binary(validate) do
     try do
       validate
-        |> Timex.parse!("%Y-%m-%d", :strftime)
-        |> Timex.format!("%Y-%m-%d", :strftime)
+        |> Date.from_iso8601!
+        |> Date.to_iso8601
     catch _, _ -> throw "Could not parse your date"
     end
   end
+
+  #
+  # Process search query options
+  #
+  def process_query(query, helper, when_, _, _) when is_binary(when_), do:
+    process_query(query <> " when:" <> when_, helper, nil, nil, nil)
+
+  def process_query(query, helper, _, from, to) when is_binary(from), do:
+    process_query(query <> " after:" <> from_to_helper(from), helper, nil, nil, to)
+
+  def process_query(query, helper, _, _, to) when is_binary(to), do:
+    process_query(query <> " before:" <> from_to_helper(to), helper, nil, nil, nil)
+
+  def process_query(query, helper, _, _, _) when helper, do: search_helper(query)
+  def process_query(query, _, _, _, _), do: query
 
   #
   # Return subarticles from the main and topic feeds.
@@ -160,16 +174,12 @@ defmodule Googlenews do
   @doc """
   Return a list of all articles from the main page of Google News given a country and a language.
   """
-  @spec top_news(proxy_descriptor, String.t, list) :: {:ok, parsed_feed} | {:error, term}
-  def top_news(
-    proxy \\ nil,
-    scraping_bee \\ nil,
-    opts \\ []
-  ) when
-    is_list(opts)
-  do
+  @spec top_news(list) :: {:ok, parsed_feed} | {:error, term}
+  def top_news(opts \\ []) when is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
+      opts = Keyword.merge @default_options, opts
+      scraping_bee = Keyword.get opts, :scraping_bee
+      proxy = Keyword.get opts, :proxy
 
       data = parse_feed(
         @base_url <> "?" <> ceid(opts),
@@ -183,21 +193,20 @@ defmodule Googlenews do
     end
   end
 
+  @spec top_news!(list) :: parsed_feed
+  def top_news!(opts \\ []) when is_list(opts) do
+    top_news(opts) |> Unsafe.Handler.bang!
+  end
+
   @doc """
   Return a list of all articles from the topic page of Google News given a country and a language.
   """
-  @spec topic_headlines(String.t, proxy_descriptor, String.t, list) :: {:ok, parsed_feed} | {:error, term}
-  def topic_headlines(
-    topic,
-    proxy \\ nil,
-    scraping_bee \\ nil,
-    opts \\ []
-  ) when
-    is_binary(topic) and
-    is_list(opts)
-  do
+  @spec topic_headlines(String.t, list) :: {:ok, parsed_feed} | {:error, term}
+  def topic_headlines(topic, opts \\ []) when is_binary(topic) and is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
+      opts = Keyword.merge @default_options, opts
+      scraping_bee = Keyword.get opts, :scraping_bee
+      proxy = Keyword.get opts, :proxy
 
       u_topic = String.upcase(topic)
       url = if u_topic in @headlines,
@@ -218,21 +227,20 @@ defmodule Googlenews do
     end
   end
 
+  @spec topic_headlines!(String.t, list) :: parsed_feed
+  def topic_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
+    topic_headlines(geo, opts) |> Unsafe.Handler.bang!
+  end
+
   @doc """
   Return a list of all articles about a specific geolocation given a country and a language.
   """
-  @spec geo_headlines(String.t, proxy_descriptor, String.t, list) :: {:ok, parsed_feed} | {:error, term}
-  def geo_headlines(
-    geo,
-    proxy \\ nil,
-    scraping_bee \\ nil,
-    opts \\ []
-  ) when
-    is_binary(geo) and
-    is_list(opts)
-  do
+  @spec geo_headlines(String.t, list) :: {:ok, parsed_feed} | {:error, term}
+  def geo_headlines(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
+      opts = Keyword.merge @default_options, opts
+      scraping_bee = Keyword.get opts, :scraping_bee
+      proxy = Keyword.get opts, :proxy
 
       data = parse_feed(
         @base_url <> "/headlines/section/geo/#{geo}?" <> ceid(opts),
@@ -246,46 +254,31 @@ defmodule Googlenews do
     end
   end
 
+  @spec geo_headlines!(String.t, list) :: parsed_feed
+  def geo_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
+    geo_headlines(geo, opts) |> Unsafe.Handler.bang!
+  end
+
   @doc """
   Return a list of all articles given a full-text search parameter, a country and a language.
 
   @param boolean helper: When True helps with URL quoting.
   @param binary when: Sets a time range for the artiles that can be found.
   """
-  @spec search(String.t, boolean, String.t, String.t, String.t, proxy_descriptor, String.t, list) :: {:ok, parsed_feed} | {:error, term}
-  def search(
-    query,
-    helper \\ true,
-    when_ \\ nil,
-    from \\ nil,
-    to \\ nil,
-    proxy \\ nil,
-    scraping_bee \\ nil,
-    opts \\ []
-  )
-
-  def search(query, helper, when_, _, _, proxy, scraping_bee, opts) when is_binary(when_) do
-    search(query <> " when:" <> when_, helper, nil, nil, nil, proxy, scraping_bee, opts)
-  end
-
-  def search(query, helper, _, from, to, proxy, scraping_bee, opts) when is_binary(from) do
-    search(query <> " after:" <> from_to_helper(from), helper, nil, nil, to, proxy, scraping_bee, opts)
-  end
-
-  def search(query, helper, _, _, to, proxy, scraping_bee, opts) when is_binary(to) do
-    search(query <> " before:" <> from_to_helper(to), helper, nil, nil, nil, proxy, scraping_bee, opts)
-  end
-
-  def search(query, helper, _, _, _, proxy, scraping_bee, opts) when helper do
-    search(search_helper(query), false, nil, nil, nil, proxy, scraping_bee, opts)
-  end
-
-  def search(query, _, _, _, _, proxy, scraping_bee, opts) when
-    is_binary(query) and
-    is_list(opts)
-  do
+  @spec search(String.t, list) :: {:ok, parsed_feed} | {:error, term}
+  def search(query, opts \\ []) when is_binary(query) and is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
+      opts = Keyword.merge @default_options, opts
+      scraping_bee = Keyword.get opts, :scraping_bee
+      proxy = Keyword.get opts, :proxy
+
+      query = process_query(
+        query,
+        Keyword.get(opts, :helper, true),
+        Keyword.get(opts, :when),
+        Keyword.get(opts, :from),
+        Keyword.get(opts, :to)
+      )
 
       data = parse_feed(
         @base_url <> "/search?q=#{query}&" <> ceid(opts),
@@ -297,6 +290,11 @@ defmodule Googlenews do
       {:ok, data}
     catch _, reason -> {:error, reason}
     end
+  end
+
+  @spec search!(String.t, list) :: parsed_feed
+  def search!(query, opts \\ []) when is_binary(query) and is_list(opts) do
+    search(query, opts) |> Unsafe.Handler.bang!
   end
 
 end
