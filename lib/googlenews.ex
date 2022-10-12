@@ -18,7 +18,7 @@ defmodule Googlenews do
     "HEALTH"
   ]
 
-  @unsupported "https://news.google.com/rss/unsupported"
+  # @unsupported "https://news.google.com/rss/unsupported"
 
   #
   # Compile correct country-lang parameters for Google News RSS URL
@@ -77,45 +77,45 @@ defmodule Googlenews do
       )
   end
 
-  defp scaping_bee_request(url, api_key) do
-    response = Req.post!(
-        "https://app.scrapingbee.com/api/v1/",
-        json: %{
-          url: url,
-          api_key: api_key,
-          render_js: "false"
-        }
-    )
-    if response.status_code != 200, do:
-      throw "ScrapingBee status_code: #{response.status_code} #{response.text}"
-
-    response
-  end
-
   #
   # Retrieve RSS Feed using provided methods
   #
   defp get_feed(_, proxies, scraping_bee) when
-    not is_nil(proxies) and not is_nil(scraping_bee)
+    not is_nil(proxies) and
+    not is_nil(scraping_bee)
   do
     throw "Pick either ScrapingBee or proxies. Not both!"
   end
 
   defp get_feed(feed_url, proxies, _) when
-    is_binary(feed_url) and not is_nil(proxies)
+    is_binary(feed_url) and
+    is_map(proxies)
   do
-    Req.get! feed_url, proxies
+    scheme = cond do
+      String.contains? feed_url, "http://" -> :http
+      String.contains? feed_url, "https://" -> :https
+      true -> :http
+    end
+    proxy = Map.get proxies, scheme
+
+    Req.get! feed_url, connect_options: [proxy: proxy]
   end
 
   defp get_feed(feed_url, _, scraping_bee) when
-    is_binary(feed_url) and not is_nil(scraping_bee)
+    is_binary(feed_url) and
+    is_binary(scraping_bee)
   do
-    scaping_bee_request feed_url, scraping_bee
+    Req.post!(
+      "https://app.scrapingbee.com/api/v1/",
+      json: %{
+        url: feed_url,
+        api_key: scraping_bee,
+        render_js: "false"
+      }
+    )
   end
 
-  defp get_feed(feed_url, _, _) when
-    is_binary(feed_url)
-  do
+  defp get_feed(feed_url, _, _) when is_binary(feed_url) do
     Req.get! feed_url
   end
 
@@ -123,27 +123,26 @@ defmodule Googlenews do
   # Check response for RSS Feed
   #
   defp check_response(response) when is_map(response) do
-    # check_url response.url
-    response.body
-  end
-
-  defp check_url(url) when is_binary(url)
-  do
-    if @unsupported in url do
-      throw "This feed is not available"
-    else
-      true
+    # if @unsupported in response.url do
+    #   throw "This feed is not available"
+    # end
+    unless response.status == 200 do
+      throw "status_code: #{response.status} body: \"#{response.body}\""
     end
+    response.body
   end
 
   defp format_map({:ok, map, _}) when is_map(map) do
     %{feed: Map.get(map, :feed), entries: Map.get(map, :entries)}
   end
 
+  #
+  # Retrieve and process RSS Feed
+  #
   defp parse_feed(
     feed_url,
-    proxies \\ nil,
-    scraping_bee \\ nil
+    proxies,
+    scraping_bee
   ) do
     feed_url
       |> get_feed(proxies, scraping_bee)
@@ -272,7 +271,8 @@ defmodule Googlenews do
   end
 
   def search(query, _, _, _, _, proxies, scraping_bee, opts) when
-    is_binary(query) and is_list(opts)
+    is_binary(query) and
+    is_list(opts)
   do
     try do
       opts = Keyword.merge(@default_options, opts)
