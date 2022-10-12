@@ -2,7 +2,7 @@ defmodule GooglenewsTest do
   use ExUnit.Case
   doctest Googlenews
 
-  test "greets the world" do
-    assert Googlenews.hello() == :world
+  test "checks return type" do
+    assert %{feed: _, entries: _} == Googlenews.top_news()
   end
 end
