@@ -28,7 +28,10 @@ defmodule Googlenews.MixProject do
 
       # dev
       {:ex_doc, "~> 0.28", only: :dev},
-      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+
+      # test
+      {:mox, "~> 0.5.2", only: :test}
     ]
   end
 end
