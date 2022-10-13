@@ -29,22 +29,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - otp: '21.0'
-            elixir: '1.7.0'
-          - otp: '21.0'
-            elixir: '1.11.0'
           - otp: '22.0'
-            elixir: '1.7.0'
-          - otp: '22.0'
-            elixir: '1.11.0'
-          - otp: '23.0'
-            elixir: '1.10.3'
+            elixir: '1.12.0'
           - otp: '23.0'
             elixir: '1.12.0'
           - otp: '24.0'
-            elixir: '1.11.4'
-          - otp: '24.0'
             elixir: '1.12.0'
+          - otp: '22.0'
+            elixir: '1.13.0'
+          - otp: '23.0'
+            elixir: '1.13.3'
+          - otp: '24.0'
+            elixir: '1.13.0'
+          - otp: '25.0'
+            elixir: '1.13.0'
+          - otp: '23.0'
+            elixir: '1.14.3'
+          - otp: '24.0'
+            elixir: '1.14.0'
+          - otp: '25.0'
+            elixir: '1.14.0'
 
     steps:
       - uses: actions/checkout@v2

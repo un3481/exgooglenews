@@ -107,36 +107,41 @@ defmodule Googlenews do
   #
   # Retrieve RSS Feed using provided methods.
   #
-  defp get_feed(_, proxy, scraping_bee) when
+  defp get_feed(_, proxy, scraping_bee, _) when
     not is_nil(proxy) and
     not is_nil(scraping_bee)
   do
     throw "Pick either ScrapingBee or proxy. Not both!"
   end
 
-  defp get_feed(feed_url, proxy, _) when
-    is_binary(feed_url) and
+  defp get_feed(feed_url, proxy, _, http_client) when
     not is_nil(proxy)
   do
-    Req.get! feed_url, connect_options: [proxy: proxy]
+    apply http_client, :get!,
+      [
+        feed_url,
+        [connect_options: [proxy: proxy]]
+      ]
   end
 
-  defp get_feed(feed_url, _, scraping_bee) when
-    is_binary(feed_url) and
+  defp get_feed(feed_url, _, scraping_bee, http_client) when
     not is_nil(scraping_bee)
   do
-    Req.post!(
-      "https://app.scrapingbee.com/api/v1/",
-      json: %{
-        url: feed_url,
-        api_key: scraping_bee,
-        render_js: "false"
-      }
-    )
+    apply http_client, :post!,
+      [
+        "https://app.scrapingbee.com/api/v1/",
+        [
+          json: %{
+            url: feed_url,
+            api_key: scraping_bee,
+            render_js: "false"
+          }
+        ]
+      ]
   end
 
-  defp get_feed(feed_url, _, _) when is_binary(feed_url) do
-    Req.get! feed_url
+  defp get_feed(feed_url, _, _, http_client) do
+    apply http_client, :get!, [feed_url]
   end
 
   #
@@ -162,10 +167,11 @@ defmodule Googlenews do
   defp parse_feed(
     feed_url,
     proxy,
-    scraping_bee
+    scraping_bee,
+    http_client
   ) do
     feed_url
-      |> get_feed(proxy, scraping_bee)
+      |> get_feed(proxy, scraping_bee, http_client)
       |> check_response
       |> FeederEx.parse
       |> format_map
@@ -177,14 +183,16 @@ defmodule Googlenews do
   @spec top_news(list) :: {:ok, parsed_feed} | {:error, term}
   def top_news(opts \\ []) when is_list(opts) do
     try do
-      opts = Keyword.merge @default_options, opts
-      scraping_bee = Keyword.get opts, :scraping_bee
-      proxy = Keyword.get opts, :proxy
+      opts = Keyword.merge(@default_options, opts)
+      http_client = Keyword.get(opts, :http_client, Req)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
+      proxy = Keyword.get(opts, :proxy)
 
       data = parse_feed(
         @base_url <> "?" <> ceid(opts),
         proxy,
-        scraping_bee
+        scraping_bee,
+        http_client
       )
       data = %{data | entries: add_sub_articles data.entries }
 
@@ -204,9 +212,10 @@ defmodule Googlenews do
   @spec topic_headlines(String.t, list) :: {:ok, parsed_feed} | {:error, term}
   def topic_headlines(topic, opts \\ []) when is_binary(topic) and is_list(opts) do
     try do
-      opts = Keyword.merge @default_options, opts
-      scraping_bee = Keyword.get opts, :scraping_bee
-      proxy = Keyword.get opts, :proxy
+      opts = Keyword.merge(@default_options, opts)
+      http_client = Keyword.get(opts, :http_client, Req)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
+      proxy = Keyword.get(opts, :proxy)
 
       u_topic = String.upcase(topic)
       url = if u_topic in @headlines,
@@ -216,7 +225,8 @@ defmodule Googlenews do
       data = parse_feed(
         @base_url <> url <> ceid(opts),
         proxy,
-        scraping_bee
+        scraping_bee,
+        http_client
       )
       data = %{data | entries: add_sub_articles data.entries }
 
@@ -238,14 +248,16 @@ defmodule Googlenews do
   @spec geo_headlines(String.t, list) :: {:ok, parsed_feed} | {:error, term}
   def geo_headlines(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
     try do
-      opts = Keyword.merge @default_options, opts
-      scraping_bee = Keyword.get opts, :scraping_bee
-      proxy = Keyword.get opts, :proxy
+      opts = Keyword.merge(@default_options, opts)
+      http_client = Keyword.get(opts, :http_client, Req)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
+      proxy = Keyword.get(opts, :proxy)
 
       data = parse_feed(
         @base_url <> "/headlines/section/geo/#{geo}?" <> ceid(opts),
         proxy,
-        scraping_bee
+        scraping_bee,
+        http_client
       )
       data = %{data | entries: add_sub_articles data.entries }
 
@@ -268,9 +280,10 @@ defmodule Googlenews do
   @spec search(String.t, list) :: {:ok, parsed_feed} | {:error, term}
   def search(query, opts \\ []) when is_binary(query) and is_list(opts) do
     try do
-      opts = Keyword.merge @default_options, opts
-      scraping_bee = Keyword.get opts, :scraping_bee
-      proxy = Keyword.get opts, :proxy
+      opts = Keyword.merge(@default_options, opts)
+      http_client = Keyword.get(opts, :http_client, Req)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
+      proxy = Keyword.get(opts, :proxy)
 
       query = process_query(
         query,
@@ -283,7 +296,8 @@ defmodule Googlenews do
       data = parse_feed(
         @base_url <> "/search?q=#{query}&" <> ceid(opts),
         proxy,
-        scraping_bee
+        scraping_bee,
+        http_client
       )
       data = %{data | entries: add_sub_articles data.entries }
 
