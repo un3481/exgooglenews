@@ -10,11 +10,13 @@ defmodule GooglenewsTest do
       }
     end)
 
-    {:ok, %{feed: _, entries: entries}} = Googlenews.top_news()
+    {:ok, %{feed: feed, entries: entries}} = Googlenews.top_news()
+
+    assert feed.__struct__ == FeederEx.Feed
 
     entries
     |> Enum.each(fn entry ->
-      assert FeederEx.Entry == entry.__struct__
+      assert entry.__struct__ == FeederEx.Entry
     end)
   end
 

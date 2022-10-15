@@ -68,42 +68,6 @@ defmodule Googlenews do
   def process_query(query, helper, _, _, _) when helper, do: search_helper(query)
   def process_query(query, _, _, _, _), do: query
 
-  #
-  # Return subarticles from the main and topic feeds.
-  #
-  defp top_news_parser(text) when is_binary(text) do
-    text
-    |> Floki.parse_document!()
-    |> Floki.find("li")
-    |> Enum.map(fn li ->
-      a = Floki.find(li, "a")
-      font = Floki.find(li, "font")
-
-      %{
-        title: Floki.text(a),
-        url: Floki.attribute(a, "href"),
-        publisher: Floki.text(font)
-      }
-    end)
-  end
-
-  defp add_sub_articles(entries) when is_list(entries) do
-    entries
-    |> Enum.map(fn entry ->
-      Map.merge(
-        entry,
-        %{
-          sub_articles:
-            if Map.get(entry, :summary) != nil do
-              top_news_parser(Map.get(entry, :summary))
-            else
-              nil
-            end
-        }
-      )
-    end)
-  end
-
   defp http_client do
     Application.get_env(:googlenews, :http_client, Req)
   end
@@ -158,7 +122,7 @@ defmodule Googlenews do
   end
 
   defp format_map({:ok, map, _}) when is_map(map) do
-    %{feed: Map.get(map, :feed), entries: Map.get(map, :entries)}
+    %{feed: Map.delete(map, :entries), entries: Map.get(map, :entries)}
   end
 
   defp format_map({:fatal_error, _, reason, _, _}), do: throw(reason)
@@ -177,6 +141,42 @@ defmodule Googlenews do
     |> check_response
     |> FeederEx.parse()
     |> format_map
+  end
+
+  #
+  # Return subarticles from the main and topic feeds.
+  #
+  defp top_news_parser(text) when is_binary(text) do
+    text
+    |> Floki.parse_document!()
+    |> Floki.find("li")
+    |> Enum.map(fn li ->
+      a = Floki.find(li, "a")
+      font = Floki.find(li, "font")
+
+      %{
+        title: Floki.text(a),
+        url: Floki.attribute(a, "href"),
+        publisher: Floki.text(font)
+      }
+    end)
+  end
+
+  defp add_sub_articles(entries) when is_list(entries) do
+    entries
+    |> Enum.map(fn entry ->
+      Map.merge(
+        entry,
+        %{
+          sub_articles:
+            if Map.get(entry, :summary) != nil do
+              top_news_parser(Map.get(entry, :summary))
+            else
+              nil
+            end
+        }
+      )
+    end)
   end
 
   @doc """
