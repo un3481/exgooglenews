@@ -6,8 +6,6 @@ defmodule Googlenews do
   @base_url "https://news.google.com/rss"
   # @unsupported "https://news.google.com/rss/unsupported"
 
-  @default_options [lang: "en", country: "US"]
-
   @headlines [
     "WORLD",
     "NATION",
@@ -36,8 +34,8 @@ defmodule Googlenews do
   # Compile correct country-lang parameters for Google News RSS URL.
   #
   defp ceid(opts) when is_list(opts) do
-    lang = Keyword.get(opts, :lang)
-    country = Keyword.get(opts, :country)
+    lang = Keyword.get(opts, :lang, "en")
+    country = Keyword.get(opts, :country, "US")
     "ceid=#{country}:#{lang}&hl=#{lang}&gl=#{country}"
   end
 
@@ -187,9 +185,8 @@ defmodule Googlenews do
   @spec top_news(list) :: {:ok, parsed_feed} | {:error, term}
   def top_news(opts \\ []) when is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
       proxy = Keyword.get(opts, :proxy)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
 
       data =
         parse_feed(
@@ -217,9 +214,8 @@ defmodule Googlenews do
   @spec topic_headlines(String.t(), list) :: {:ok, parsed_feed} | {:error, term}
   def topic_headlines(topic, opts \\ []) when is_binary(topic) and is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
       proxy = Keyword.get(opts, :proxy)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
 
       u_topic = String.upcase(topic)
 
@@ -256,9 +252,8 @@ defmodule Googlenews do
   @spec geo_headlines(String.t(), list) :: {:ok, parsed_feed} | {:error, term}
   def geo_headlines(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
       proxy = Keyword.get(opts, :proxy)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
 
       data =
         parse_feed(
@@ -289,9 +284,8 @@ defmodule Googlenews do
   @spec search(String.t(), list) :: {:ok, parsed_feed} | {:error, term}
   def search(query, opts \\ []) when is_binary(query) and is_list(opts) do
     try do
-      opts = Keyword.merge(@default_options, opts)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
       proxy = Keyword.get(opts, :proxy)
+      scraping_bee = Keyword.get(opts, :scraping_bee)
 
       query =
         process_query(

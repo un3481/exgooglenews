@@ -6,7 +6,7 @@ defmodule GooglenewsTest do
     Mox.expect(ReqMock, :get!, fn _, _ ->
       %Req.Response{
         status: 200,
-        body: File.read!("test/sample.xml")
+        body: File.read!("test/documents/sample.xml")
       }
     end)
 
