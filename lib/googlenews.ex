@@ -115,7 +115,7 @@ defmodule Googlenews do
     #   throw "This feed is not available"
     # end
     unless response.status == 200 do
-      throw("status_code: #{response.status} body: \"#{response.body}\"")
+      throw(%{status: response.status, body: response.body})
     end
 
     response.body
