@@ -1,3 +1,6 @@
+
+[![Build Status](https://github.com/un3481/exgooglenews/workflows/tests/badge.svg?branch=main)](https://github.com/un3481/exgooglenews/actions) [![Hex pm](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hex.pm/packages/googlenews) [![Hexdocs.pm](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/googlenews/)
+
 # Googlenews
 If Google News had an Elixir library
 
