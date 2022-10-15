@@ -4,10 +4,6 @@
 # Googlenews
 If Google News had an Elixir library
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/googlenews>.
-
 ### Table of Contents
 - [About](#about)
 - [Examples of Use Cases](#usecase)
@@ -17,8 +13,7 @@ be found at <https://hexdocs.pm/googlenews>.
 - [Quickstart](#quickstart)
 - [Documentation](#documentation)
 - [Advanced Query Search Examples](#examples)
-- [About me](#aboutme)
-- [Change Log](#changelog)
+- [Useful Links](#useful-links)
 
 <a name="about"/>
 
@@ -51,16 +46,18 @@ Top stories, topic related news feeds, geolocation news feed, and an extensive f
 
 ## Working with Google News in Production
 
-Before we start, if you want to integrate Google News data to your production then I would advise you to use one of the 2 methods described below. Why? Because you do not want your servers IP address to be locked by Google. Every time you call any function there is an HTTPS request to Google's servers. **Don't get me wrong, this package still works out of the box.**
+You do not want your servers IP address to be locked by Google, because every time you call a function from this package an HTTPS request is sent to Google's servers.
 
-1. [ScrapingBee API](https://www.scrapingbee.com?fpr=artem26) which handles proxy rotation for you. Each function in this package has `scraping_bee` parameter where you paste your API key. You can also try it for free, no credit card required. See [example](#scrapingbeeexample)
-2. Your own proxy — already have a pool of proxies? Each function in this package has `proxy` parameter (elixir tuple) where you just paste your own proxy. 
+So if you want to integrate this package to your production you should use one of the 2 methods described below:
+
+1. [ScrapingBee API](https://www.scrapingbee.com?fpr=artem26) which handles proxy rotation for you. Each function in this package has a `:scraping_bee` option where you can pass your API key. You can also try it for free, no credit card required. See [example](#scrapingbeeexample).
+2. Your own proxy — already have a pool of proxies? Each function in this package has a `:proxy` option where you can setup your own HTTP/HTTPS proxy. 
 
 <a name="motivaion"/>
 
 ## **Motivation**
 
-I wanted to implement functionalities from [pygooglenews](https://github.com/kotartemiy/pygooglenews) into an elixir environment.
+I wanted to implement functionalities from [PyGoogleNews](https://github.com/kotartemiy/pygooglenews) project in an elixir environment.
 
 **This package uses the RSS feed of the Google News. The [top stories page](https://news.google.com/rss), for example.**
 
@@ -74,8 +71,7 @@ about RSS syntax is decentralized over the web. There is no official documentati
 
 ## **Installation**
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `googlenews` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `googlenews` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -93,19 +89,22 @@ end
 ### **Top Stories**
 
 ```elixir
+# Get top articles from Google News
 {:ok, top} = Googlenews.top_news()
 ```
 
 ### **Stories by Topic**
 
 ```elixir
-{:ok, business} = Googlenews.topic_headlines("business")
+# Get top articles related to the topic 'BUSINESS'
+{:ok, business} = Googlenews.topic_headlines("Business")
 
 ```
 
 ### **Geolocation Specific Stories**
 
 ```elixir
+# Get top articles in the location of San Francisco
 {:ok, headquaters} = Googlenews.geo_headlines("San Fran")
 
 ```
@@ -113,7 +112,7 @@ end
 ### **Stories by a Query Search**
 
 ```elixir
-# search for the best matching articles that mention MSFT and 
+# Search for the best matching articles that mention MSFT and 
 # do not mention AAPL (over the past 6 months)
 {:ok, search} = Googlenews.search("MSFT -APPL", when: "6m")
 
@@ -136,7 +135,7 @@ Every function can accept `:lang` and `:country` options. 
 
 You can try any combination of those 2, however, it does not exist for all. Only the combinations that are supported by Google News will work. Check the official Google News page to check what is covered:
 
-On the bottom left side of the Google News page you may find a `Language & region` section where you can find all of the supported combinations.
+On the bottom left side of the [Google News](https://news.google.com) page you may find a `Language & region` section where you can find all of the supported combinations.
 
 
 For example, for `country: "UA"` (Ukraine), there are 2 languages supported:
@@ -154,7 +153,9 @@ For example, for `country: "UA"` (Ukraine), there are 2 languages supported:
 
 ```
 
-`top_news()` returns the top stories for the selected country and language that are defined in `lang` and `country` arguments. The returned object contains `feed` (FeedParserDict) and `entries` list of articles found with all data parsed.
+The returned map contains `feed` and `entries` list of articles found with all data parsed.
+
+This function gets the top stories for the selected country and language that are defined in `:lang` and `:country` options.
 
 ---
 
@@ -166,7 +167,7 @@ For example, for `country: "UA"` (Ukraine), there are 2 languages supported:
 
 ```
 
-The returned object contains `feed` (FeedParserDict) and `entries` list of articles found with all data parsed.
+The returned map contains `feed` and `entries` list of articles found with all data parsed.
 
 Accepted topics are:
 
@@ -212,7 +213,7 @@ topic = "CAAqIggKIhxDQkFTRHdvSkwyMHZNREZqY0hsNUVnSmxiaWdBUAE"
 
 ```
 
-The returned object contains `feed` (FeedParserDict) and `entries` list of articles found with all data parsed.
+The returned map contains `feed` and `entries` list of articles found with all data parsed.
 
 All of the above variations will return the same feed of the latest news about Kyiv, Ukraine:
 
@@ -239,7 +240,7 @@ The main (`en`, `US`) Google News client will most likely find the feed about t
 
 ```
 
-The returned object contains `feed` (FeedParserDict) and `entries` list of articles found with all data parsed.
+The returned map contains `feed` and `entries` list of articles found with all data parsed.
 
 Google News search itself is a complex function that has inherited some features from the standard Google Search.
 
@@ -329,7 +330,7 @@ Note: Putting **`allintitle:`** at the beginning of a search query is equival
 The `allinurl:` query term restricts search results to documents that contain all of the query words in the document URL. To use the `allinurl:` query term, include allinurl: at the start of your search query.
 
 
-**Tip**. If you want to build a near real-time feed for a specific topic, use `when='1h'`. If Google captured fewer than 100 articles over the past hour, you should be able to retrieve all of them.
+**Tip**. If you want to build a near real-time feed for a specific topic, use `when: "1h"`. If Google captured fewer than 100 articles over the past hour, you should be able to retrieve all of them.
 
 Check the [Useful Links](notion://www.notion.so/Google-News-API-Documentation-b95117b9ecd94076bb1d8cf7c2957d78#useful-links) section if you want to dig into how Google Search works.
 
@@ -350,9 +351,9 @@ All 4 functions return a `map` that contains 2 items:
 - `feed` - contains the information on the feed metadata
 - `entries` - contains the parsed articles
 
-Both are inherited from [FeederEx](https://github.com/manukall/feeder_ex/) package. The only change is that each dictionary under `entries` also contains `sub_articles` which are the similar articles found in the description. Usually, it is non-empty for `top_news()` and `topic_headlines()` feeds.
+Both are inherited from [FeederEx](https://github.com/manukall/feeder_ex/) package. The only change is that each entry under `entries` also contains `sub_articles` which are the similar articles found in the description. Usually, it is non-empty for `top_news()` and `topic_headlines()` feeds.
 
-**Tip** To check what is the found feed's name just check the `title` under the `feed` dictionary
+**Tip** To check what is the found feed's name just check the `title` under the `feed` struct.
 
 ---
 <a name="scrapingbeeexample"/>
@@ -361,9 +362,9 @@ Both are inherited from [FeederEx](https://github.com/manukall/feeder_ex/) packa
 
 Every function has `:scraping_bee` option. It accepts your [ScrapingBee](https://www.scrapingbee.com?fpr=artem26) API key that will be used to get the response from Google's servers. 
 
-You can take a look at what exactly is happening in the source code: check for `get_feed()` function under Googlenews module
+You can take a look at what exactly is happening in the source code: check for `get_feed()` function under Googlenews module.
 
-Pay attention to the concurrency of each plan at [ScrapingBee](https://www.scrapingbee.com?fpr=artem26)
+Pay attention to the concurrency of each plan at [ScrapingBee](https://www.scrapingbee.com?fpr=artem26).
  
 How to use example:
 
@@ -441,20 +442,8 @@ search.feed.title
 
 ## **Useful Links**
 
-[Stack Overflow thread from which it all began](https://stackoverflow.com/questions/51537063/url-format-for-google-news-rss-feed)
+[PyGoogleNews](https://github.com/kotartemiy/pygooglenews)
 
 [Google XML reference for the search query](https://developers.google.com/custom-search/docs/xml_results)
 
 [Google News Search parameters (The Missing Manual)](http://web.archive.org/web/20150204025359/http://blog.slashpoundbang.com/post/12975232033/google-news-search-parameters-the-missing-manual)
-
----
-<a name="built"/>
-
-## **Built With**
-
-[FeederEx](https://github.com/manukall/feeder_ex/)
-
-[Floki](https://github.com/philss/floki/)
-
-[Req](https://github.com/wojtekmach/req)
-
