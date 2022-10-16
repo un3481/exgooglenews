@@ -2,16 +2,6 @@ defmodule GooglenewsTest do
   use ExUnit.Case
   doctest Googlenews
 
-  test "error on 404" do
-    Mox.expect(ReqMock, :get!, fn _, _ ->
-      %Req.Response{status: 404}
-    end)
-
-    reason = %{status: 404, body: ""}
-
-    assert {:error, reason} == Googlenews.top_news()
-  end
-
   test "error on invalid RSS" do
     Mox.expect(ReqMock, :get!, fn _, _ ->
       %Req.Response{status: 200, body: ""}
@@ -22,7 +12,25 @@ defmodule GooglenewsTest do
     assert {:error, reason} == Googlenews.top_news()
   end
 
-  test "ok on 200" do
+  test "error on 404 & build query" do
+    Mox.expect(ReqMock, :get!, fn url, _ ->
+      %Req.Response{
+        status: 404,
+        body: "requested url: " <> url
+      }
+    end)
+
+    reason = %{
+      status: 404,
+      body:
+        "requested url: " <>
+          "https://news.google.com/rss?ceid=US:en&hl=en&gl=US"
+    }
+
+    assert {:error, reason} == Googlenews.top_news()
+  end
+
+  test "ok on 200 for top_news" do
     Mox.expect(ReqMock, :get!, fn _, _ ->
       %Req.Response{
         status: 200,
@@ -33,27 +41,32 @@ defmodule GooglenewsTest do
     {:ok, %{feed: feed, entries: entries}} = Googlenews.top_news()
 
     assert feed.__struct__ == FeederEx.Feed
+    assert feed.title == "Top stories - Google News"
 
-    entries
-    |> Enum.each(fn entry ->
+    Enum.each(entries, fn entry ->
       assert entry.__struct__ == FeederEx.Entry
     end)
   end
 
-  test "build of search query" do
+  test "error on 404 & build search query" do
     Mox.expect(ReqMock, :get!, fn url, _ ->
-      %Req.Response{status: 404, body: url}
+      %Req.Response{
+        status: 404,
+        body: "requested url: " <> url
+      }
     end)
 
-    expected_url =
-      "https://news.google.com/rss/search?q=boeing%20after:2022-02-24&ceid=US:en&hl=en&gl=US"
-
-    reason = %{status: 404, body: expected_url}
+    reason = %{
+      status: 404,
+      body:
+        "requested url: " <>
+          "https://news.google.com/rss/search?q=boeing%20after:2022-02-24&ceid=US:en&hl=en&gl=US"
+    }
 
     assert {:error, reason} == Googlenews.search("boeing", from: "2022-02-24")
   end
 
-  test "ok on 200 /search" do
+  test "ok on 200 for search" do
     Mox.expect(ReqMock, :get!, fn _, _ ->
       %Req.Response{
         status: 200,
@@ -64,9 +77,9 @@ defmodule GooglenewsTest do
     {:ok, %{feed: feed, entries: entries}} = Googlenews.search("boeing", from: "2022-02-24")
 
     assert feed.__struct__ == FeederEx.Feed
+    assert feed.title == "\"boeing after:2022-02-24\" - Google News"
 
-    entries
-    |> Enum.each(fn entry ->
+    Enum.each(entries, fn entry ->
       assert entry.__struct__ == FeederEx.Entry
     end)
   end
