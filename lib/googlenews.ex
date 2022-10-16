@@ -26,7 +26,7 @@ defmodule Googlenews do
   Result of parsing a RSS Feed.
   """
   @type parsed_feed :: %{
-          feed: term,
+          feed: FeederEx.Feed,
           entries: [FeederEx.Entry.t()]
         }
 
@@ -39,10 +39,6 @@ defmodule Googlenews do
     "ceid=#{country}:#{lang}&hl=#{lang}&gl=#{country}"
   end
 
-  defp search_helper(query) when is_binary(query) do
-    URI.encode(query)
-  end
-
   defp from_to_helper(validate) when is_binary(validate) do
     try do
       validate
@@ -51,6 +47,10 @@ defmodule Googlenews do
     catch
       _, _ -> throw("Could not parse your date")
     end
+  end
+
+  defp search_helper(query) when is_binary(query) do
+    URI.encode(query)
   end
 
   #
@@ -68,6 +68,9 @@ defmodule Googlenews do
   def process_query(query, helper, _, _, _) when helper, do: search_helper(query)
   def process_query(query, _, _, _, _), do: query
 
+  #
+  # Get http client (Req) or mock when testing
+  #
   defp http_client do
     Application.get_env(:googlenews, :http_client, Req)
   end
@@ -111,21 +114,26 @@ defmodule Googlenews do
   # Check response for RSS Feed.
   #
   defp check_response(response) when is_map(response) do
-    # if @unsupported in response.url do
-    #   throw "This feed is not available"
-    # end
     unless response.status == 200 do
       throw(%{status: response.status, body: response.body})
     end
 
+    # if @unsupported in response.url do
+    #   throw "This feed is not available"
+    # end
+
     response.body
   end
 
+  #
+  # Separate FeederEx Feed from Entries
+  #
   defp format_map({:ok, map, _}) when is_map(map) do
     %{feed: Map.delete(map, :entries), entries: Map.get(map, :entries)}
   end
 
   defp format_map({:fatal_error, _, reason, _, _}), do: throw(reason)
+  defp format_map({:error, reason}), do: throw(reason)
   defp format_map(unknown), do: throw(unknown)
 
   #
