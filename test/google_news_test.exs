@@ -1,6 +1,6 @@
-defmodule GooglenewsTest do
+defmodule GoogleNewsTest do
   use ExUnit.Case
-  doctest Googlenews
+  doctest GoogleNews
 
   test "error on invalid RSS" do
     Mox.expect(ReqMock, :get!, fn _, _ ->
@@ -9,7 +9,7 @@ defmodule GooglenewsTest do
 
     reason = 'Can\'t detect character encoding due to lack of indata'
 
-    assert {:error, reason} == Googlenews.top_news()
+    assert {:error, reason} == GoogleNews.top_news()
   end
 
   test "error on 404 & build query" do
@@ -27,7 +27,7 @@ defmodule GooglenewsTest do
           "https://news.google.com/rss?ceid=US:en&hl=en&gl=US"
     }
 
-    assert {:error, reason} == Googlenews.top_news()
+    assert {:error, reason} == GoogleNews.top_news()
   end
 
   test "ok on 200 for top_news" do
@@ -38,7 +38,7 @@ defmodule GooglenewsTest do
       }
     end)
 
-    {:ok, %{feed: feed, entries: entries}} = Googlenews.top_news()
+    {:ok, %{feed: feed, entries: entries}} = GoogleNews.top_news()
 
     assert feed.__struct__ == FeederEx.Feed
     assert feed.title == "Top stories - Google News"
@@ -63,7 +63,7 @@ defmodule GooglenewsTest do
           "https://news.google.com/rss/search?q=boeing%20after:2022-02-24&ceid=US:en&hl=en&gl=US"
     }
 
-    assert {:error, reason} == Googlenews.search("boeing", from: "2022-02-24")
+    assert {:error, reason} == GoogleNews.search("boeing", from: "2022-02-24")
   end
 
   test "ok on 200 for search" do
@@ -74,7 +74,7 @@ defmodule GooglenewsTest do
       }
     end)
 
-    {:ok, %{feed: feed, entries: entries}} = Googlenews.search("boeing", from: "2022-02-24")
+    {:ok, %{feed: feed, entries: entries}} = GoogleNews.search("boeing", from: "2022-02-24")
 
     assert feed.__struct__ == FeederEx.Feed
     assert feed.title == "\"boeing after:2022-02-24\" - Google News"

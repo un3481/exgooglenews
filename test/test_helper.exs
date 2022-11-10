@@ -7,4 +7,4 @@ end
 
 Mox.defmock(ReqMock, for: ReqBehaviour)
 
-Application.put_env(:googlenews, :http_client, ReqMock)
+Application.put_env(:google_news, :http_client, ReqMock)

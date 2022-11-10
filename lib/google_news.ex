@@ -1,6 +1,6 @@
-defmodule Googlenews do
+defmodule GoogleNews do
   @moduledoc """
-  Documentation for `Googlenews`.
+  Documentation for `GoogleNews`.
   """
 
   @base_url "https://news.google.com/rss"
@@ -72,7 +72,7 @@ defmodule Googlenews do
   # Get http client (Req) or mock when testing
   #
   defp http_client do
-    Application.get_env(:googlenews, :http_client, Req)
+    Application.get_env(:google_news, :http_client, Req)
   end
 
   #
@@ -213,7 +213,7 @@ defmodule Googlenews do
 
   @spec top_news!(list) :: parsed_feed
   def top_news!(opts \\ []) when is_list(opts) do
-    top_news(opts) |> ErrorHandler.bang!()
+    top_news(opts) |> GoogleNews.ErrorHandler.bang!()
   end
 
   @doc """
@@ -251,7 +251,7 @@ defmodule Googlenews do
 
   @spec topic_headlines!(String.t(), list) :: parsed_feed
   def topic_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
-    topic_headlines(geo, opts) |> ErrorHandler.bang!()
+    topic_headlines(geo, opts) |> GoogleNews.ErrorHandler.bang!()
   end
 
   @doc """
@@ -280,7 +280,7 @@ defmodule Googlenews do
 
   @spec geo_headlines!(String.t(), list) :: parsed_feed
   def geo_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
-    geo_headlines(geo, opts) |> ErrorHandler.bang!()
+    geo_headlines(geo, opts) |> GoogleNews.ErrorHandler.bang!()
   end
 
   @doc """
@@ -321,6 +321,6 @@ defmodule Googlenews do
 
   @spec search!(String.t(), list) :: parsed_feed
   def search!(query, opts \\ []) when is_binary(query) and is_list(opts) do
-    search(query, opts) |> ErrorHandler.bang!()
+    search(query, opts) |> GoogleNews.ErrorHandler.bang!()
   end
 end
