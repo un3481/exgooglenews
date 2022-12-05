@@ -21,8 +21,7 @@ defmodule GoogleNews.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:req, "~> 0.3"},
-      {:req, git: "https://github.com/wojtekmach/req.git"},
+      {:req, "~> 0.3.2"},
       {:feeder_ex, "~> 1.1"},
       {:floki, "~> 0.33"},
 
