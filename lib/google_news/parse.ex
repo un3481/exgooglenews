@@ -42,8 +42,8 @@ defmodule GoogleNews.Parse do
   @doc """
   Parse RSS Feed
   """
-  @spec feed!(String.t()) :: Feed.t()
-  def feed!(rss) when is_binary(rss) do
+  @spec parse!(String.t()) :: Feed.t()
+  def parse!(rss) when is_binary(rss) do
     rss
     |> FeederEx.parse()
     |> format_map()

@@ -36,13 +36,13 @@ defmodule GoogleNews.Fetch do
   @doc """
   Retrieve RSS Feed using provided methods.
   """
-  @spec feed!(binary, proxy_descriptor, binary) :: String.t()
-  def feed!(_, proxy, scraping_bee)
+  @spec fetch!(binary, proxy_descriptor, binary) :: String.t()
+  def fetch!(_, proxy, scraping_bee)
       when not is_nil(proxy) and not is_nil(scraping_bee) do
     raise(ArgumentError, message: "Pick either a proxy or ScrapingBee. Not both!")
   end
 
-  def feed!(url, nil, nil) do
+  def fetch!(url, nil, nil) do
     args = [@base_url <> url, []]
 
     http_client()
@@ -50,7 +50,7 @@ defmodule GoogleNews.Fetch do
     |> check_response()
   end
 
-  def feed!(url, proxy, nil)
+  def fetch!(url, proxy, nil)
       when not is_nil(proxy) do
     args = [@base_url <> url, [connect_options: [proxy: proxy]]]
 
@@ -59,7 +59,7 @@ defmodule GoogleNews.Fetch do
     |> check_response()
   end
 
-  def feed!(url, nil, scraping_bee)
+  def fetch!(url, nil, scraping_bee)
       when not is_nil(scraping_bee) do
     args = [
       "https://app.scrapingbee.com/api/v1/",

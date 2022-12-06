@@ -35,8 +35,8 @@ defmodule GoogleNews do
 
     data =
       ("?" <> ceid(opts))
-      |> Fetch.feed!(proxy, scraping_bee)
-      |> Parse.feed!()
+      |> Fetch.fetch!(proxy, scraping_bee)
+      |> Parse.parse!()
 
     %{data | entries: SubArticles.merge!(data.entries)}
   end
@@ -69,8 +69,8 @@ defmodule GoogleNews do
 
     data =
       (url <> ceid(opts))
-      |> Fetch.feed!(proxy, scraping_bee)
-      |> Parse.feed!()
+      |> Fetch.fetch!(proxy, scraping_bee)
+      |> Parse.parse!()
 
     entries = SubArticles.merge!(data.entries)
     if Enum.empty?(entries), do: raise(Error, message: "Unsupported topic")
@@ -99,8 +99,8 @@ defmodule GoogleNews do
 
     data =
       ("/headlines/section/geo/#{geo}?" <> ceid(opts))
-      |> Fetch.feed!(proxy, scraping_bee)
-      |> Parse.feed!()
+      |> Fetch.fetch!(proxy, scraping_bee)
+      |> Parse.parse!()
 
     %{data | entries: SubArticles.merge!(data.entries)}
   end
@@ -138,8 +138,8 @@ defmodule GoogleNews do
 
     data =
       ("/search?q=#{query}&" <> ceid(opts))
-      |> Fetch.feed!(proxy, scraping_bee)
-      |> Parse.feed!()
+      |> Fetch.fetch!(proxy, scraping_bee)
+      |> Parse.parse!()
 
     %{data | entries: SubArticles.merge!(data.entries)}
   end
