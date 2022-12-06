@@ -9,12 +9,13 @@ defmodule GoogleNewsTest do
   @example_proxy {:http, "localhost", 8899, []}
   @example_scraping_bee_token "123456789abc"
 
-  test "error on argument to proxy & scraping_bee" do
+  test "error on using both proxy & scraping_bee" do
     error = %ArgumentError{
       message: "Pick either a proxy or ScrapingBee. Not both!"
     }
 
-    assert {:error, error} == GoogleNews.top_news(proxy: @example_proxy, scraping_bee: @example_scraping_bee_token)
+    assert {:error, error} ==
+             GoogleNews.top_news(proxy: @example_proxy, scraping_bee: @example_scraping_bee_token)
   end
 
   test "error on Req" do
@@ -45,7 +46,7 @@ defmodule GoogleNewsTest do
     assert {:error, error} == GoogleNews.top_news()
   end
 
-  test "error on 404 & build query" do
+  test "error on 404 for top_news" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @top_news_url
       assert opts == []
@@ -100,7 +101,14 @@ defmodule GoogleNewsTest do
   test "error on 404 for top_news using scraping bee" do
     Mox.expect(ReqMock, :post, fn url, opts ->
       assert url == @scraping_bee_url
-      assert opts == [json: %{api_key: @example_scraping_bee_token, render_js: "false", url: @top_news_url}]
+
+      assert opts == [
+               json: %{
+                 api_key: @example_scraping_bee_token,
+                 render_js: "false",
+                 url: @top_news_url
+               }
+             ]
 
       {:ok, %Req.Response{status: 404, body: :scraping_bee}}
     end)
@@ -120,7 +128,7 @@ defmodule GoogleNewsTest do
     assert {:error, error} == GoogleNews.search("boeing", from: ~D[2022-02-24])
   end
 
-  test "error on 404 & build search query" do
+  test "error on 404 for search" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @boeing_search_url
       assert opts == []
