@@ -3,9 +3,6 @@ defmodule GoogleNews do
   Documentation for `GoogleNews`.
   """
 
-  @base_url "https://news.google.com/rss"
-  # @unsupported "https://news.google.com/rss/unsupported"
-
   @headlines [
     "WORLD",
     "NATION",
@@ -17,270 +14,106 @@ defmodule GoogleNews do
     "HEALTH"
   ]
 
-  @typedoc """
-  Proxy configuration for Mint package.
-  """
-  @type proxy_descriptor :: {atom, String.t(), integer, list}
+  alias GoogleNews.Feed
+  alias GoogleNews.{Error, FetchError, ParseError}
+  alias GoogleNews.{Fetch, Parse, SubArticles, Search}
 
-  @typedoc """
-  Result of parsing a RSS Feed.
-  """
-  @type parsed_feed :: %{
-          feed: FeederEx.Feed,
-          entries: [FeederEx.Entry.t()]
-        }
-
-  #
   # Compile correct country-lang parameters for Google News RSS URL.
-  #
   defp ceid(opts) when is_list(opts) do
     lang = Keyword.get(opts, :lang, "en")
     country = Keyword.get(opts, :country, "US")
     "ceid=#{country}:#{lang}&hl=#{lang}&gl=#{country}"
   end
 
-  defp from_to_helper(validate) when is_binary(validate) do
-    try do
-      validate
-      |> Date.from_iso8601!()
-      |> Date.to_iso8601()
-    catch
-      _, _ -> throw("Could not parse your date")
-    end
-  end
+  @doc """
+  Return a list of all articles from the main page of Google News given a country and a language.
+  """
+  @spec top_news!(list) :: Feed.t()
+  def top_news!(opts \\ []) when is_list(opts) do
+    proxy = Keyword.get(opts, :proxy)
+    scraping_bee = Keyword.get(opts, :scraping_bee)
 
-  defp search_helper(query) when is_binary(query) do
-    URI.encode(query)
-  end
+    data =
+      ("?" <> ceid(opts))
+      |> Fetch.feed!(proxy, scraping_bee)
+      |> Parse.feed!()
 
-  #
-  # Process search query options
-  #
-  def process_query(query, helper, when_, _, _) when is_binary(when_),
-    do: process_query(query <> " when:" <> when_, helper, nil, nil, nil)
-
-  def process_query(query, helper, _, from, to) when is_binary(from),
-    do: process_query(query <> " after:" <> from_to_helper(from), helper, nil, nil, to)
-
-  def process_query(query, helper, _, _, to) when is_binary(to),
-    do: process_query(query <> " before:" <> from_to_helper(to), helper, nil, nil, nil)
-
-  def process_query(query, helper, _, _, _) when helper, do: search_helper(query)
-  def process_query(query, _, _, _, _), do: query
-
-  #
-  # Get http client (Req) or mock when testing
-  #
-  defp http_client do
-    Application.get_env(:google_news, :http_client, Req)
-  end
-
-  #
-  # Retrieve RSS Feed using provided methods.
-  #
-  defp get_feed(_, proxy, scraping_bee)
-       when not is_nil(proxy) and
-              not is_nil(scraping_bee) do
-    throw("Pick either ScrapingBee or proxy. Not both!")
-  end
-
-  defp get_feed(feed_url, proxy, _)
-       when not is_nil(proxy) do
-    apply(http_client(), :get!, [
-      feed_url,
-      [connect_options: [proxy: proxy]]
-    ])
-  end
-
-  defp get_feed(feed_url, _, scraping_bee)
-       when not is_nil(scraping_bee) do
-    apply(http_client(), :post!, [
-      "https://app.scrapingbee.com/api/v1/",
-      [
-        json: %{
-          url: feed_url,
-          api_key: scraping_bee,
-          render_js: "false"
-        }
-      ]
-    ])
-  end
-
-  defp get_feed(feed_url, _, _) do
-    apply(http_client(), :get!, [feed_url, []])
-  end
-
-  #
-  # Check response for RSS Feed.
-  #
-  defp check_response(response) when is_map(response) do
-    unless response.status == 200 do
-      throw(%{status: response.status, body: response.body})
-    end
-
-    # if @unsupported in response.url do
-    #   throw "This feed is not available"
-    # end
-
-    response.body
-  end
-
-  #
-  # Separate FeederEx Feed from Entries
-  #
-  defp format_map({:ok, map, _}) when is_map(map) do
-    %{feed: Map.delete(map, :entries), entries: Map.get(map, :entries)}
-  end
-
-  defp format_map({:fatal_error, _, reason, _, _}), do: throw(reason)
-  defp format_map({:error, reason}), do: throw(reason)
-  defp format_map(unknown), do: throw(unknown)
-
-  #
-  # Retrieve and process RSS Feed.
-  #
-  defp parse_feed(
-         feed_url,
-         proxy,
-         scraping_bee
-       ) do
-    feed_url
-    |> get_feed(proxy, scraping_bee)
-    |> check_response
-    |> FeederEx.parse()
-    |> format_map
-  end
-
-  #
-  # Return subarticles from the main and topic feeds.
-  #
-  defp top_news_parser(text) when is_binary(text) do
-    text
-    |> Floki.parse_document!()
-    |> Floki.find("li")
-    |> Enum.map(fn li ->
-      a = Floki.find(li, "a")
-      font = Floki.find(li, "font")
-
-      %{
-        title: Floki.text(a),
-        url: Floki.attribute(a, "href"),
-        publisher: Floki.text(font)
-      }
-    end)
-  end
-
-  defp add_sub_articles(entries) when is_list(entries) do
-    entries
-    |> Enum.map(fn entry ->
-      Map.merge(
-        entry,
-        %{
-          sub_articles:
-            if Map.get(entry, :summary) != nil do
-              top_news_parser(Map.get(entry, :summary))
-            else
-              nil
-            end
-        }
-      )
-    end)
+    %{data | entries: SubArticles.merge!(data.entries)}
   end
 
   @doc """
   Return a list of all articles from the main page of Google News given a country and a language.
   """
-  @spec top_news(list) :: {:ok, parsed_feed} | {:error, term}
+  @spec top_news(list) :: {:ok, Feed.t()} | {:error, term}
   def top_news(opts \\ []) when is_list(opts) do
-    try do
-      proxy = Keyword.get(opts, :proxy)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
-
-      data =
-        parse_feed(
-          @base_url <> "?" <> ceid(opts),
-          proxy,
-          scraping_bee
-        )
-
-      data = %{data | entries: add_sub_articles(data.entries)}
-
-      {:ok, data}
-    catch
-      _, reason -> {:error, reason}
-    end
-  end
-
-  @spec top_news!(list) :: parsed_feed
-  def top_news!(opts \\ []) when is_list(opts) do
-    top_news(opts) |> GoogleNews.ErrorHandler.bang!()
+    {:ok, top_news!(opts)}
+  rescue
+    error in [Error, FetchError, ParseError, ArgumentError] ->
+      {:error, error}
   end
 
   @doc """
   Return a list of all articles from the topic page of Google News given a country and a language.
   """
-  @spec topic_headlines(String.t(), list) :: {:ok, parsed_feed} | {:error, term}
-  def topic_headlines(topic, opts \\ []) when is_binary(topic) and is_list(opts) do
-    try do
-      proxy = Keyword.get(opts, :proxy)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
+  @spec topic_headlines!(binary, list) :: Feed.t()
+  def topic_headlines!(topic, opts \\ []) when is_binary(topic) and is_list(opts) do
+    proxy = Keyword.get(opts, :proxy)
+    scraping_bee = Keyword.get(opts, :scraping_bee)
 
-      u_topic = String.upcase(topic)
+    u_topic = String.upcase(topic)
 
-      url =
-        if u_topic in @headlines,
-          do: "/headlines/section/topic/#{u_topic}?",
-          else: "/topics/#{topic}?"
+    url =
+      if u_topic in @headlines,
+        do: "/headlines/section/topic/#{u_topic}?",
+        else: "/topics/#{topic}?"
 
-      data =
-        parse_feed(
-          @base_url <> url <> ceid(opts),
-          proxy,
-          scraping_bee
-        )
+    data =
+      (url <> ceid(opts))
+      |> Fetch.feed!(proxy, scraping_bee)
+      |> Parse.feed!()
 
-      data = %{data | entries: add_sub_articles(data.entries)}
+    entries = SubArticles.merge!(data.entries)
+    if Enum.empty?(entries), do: raise(Error, message: "Unsupported topic")
 
-      if Enum.empty?(data.entries), do: throw("Unsupported topic")
-
-      {:ok, data}
-    catch
-      _, reason -> {:error, reason}
-    end
+    %{data | entries: entries}
   end
 
-  @spec topic_headlines!(String.t(), list) :: parsed_feed
-  def topic_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
-    topic_headlines(geo, opts) |> GoogleNews.ErrorHandler.bang!()
+  @doc """
+  Return a list of all articles from the topic page of Google News given a country and a language.
+  """
+  @spec topic_headlines(binary, list) :: {:ok, Feed.t()} | {:error, term}
+  def topic_headlines(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
+    {:ok, topic_headlines!(geo, opts)}
+  rescue
+    error in [Error, FetchError, ParseError, ArgumentError] ->
+      {:error, error}
   end
 
   @doc """
   Return a list of all articles about a specific geolocation given a country and a language.
   """
-  @spec geo_headlines(String.t(), list) :: {:ok, parsed_feed} | {:error, term}
-  def geo_headlines(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
-    try do
-      proxy = Keyword.get(opts, :proxy)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
+  @spec geo_headlines!(binary, list) :: Feed.t()
+  def geo_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
+    proxy = Keyword.get(opts, :proxy)
+    scraping_bee = Keyword.get(opts, :scraping_bee)
 
-      data =
-        parse_feed(
-          @base_url <> "/headlines/section/geo/#{geo}?" <> ceid(opts),
-          proxy,
-          scraping_bee
-        )
+    data =
+      ("/headlines/section/geo/#{geo}?" <> ceid(opts))
+      |> Fetch.feed!(proxy, scraping_bee)
+      |> Parse.feed!()
 
-      data = %{data | entries: add_sub_articles(data.entries)}
-
-      {:ok, data}
-    catch
-      _, reason -> {:error, reason}
-    end
+    %{data | entries: SubArticles.merge!(data.entries)}
   end
 
-  @spec geo_headlines!(String.t(), list) :: parsed_feed
-  def geo_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
-    geo_headlines(geo, opts) |> GoogleNews.ErrorHandler.bang!()
+  @doc """
+  Return a list of all articles about a specific geolocation given a country and a language.
+  """
+  @spec geo_headlines(binary, list) :: {:ok, Feed.t()} | {:error, term}
+  def geo_headlines(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
+    {:ok, geo_headlines!(geo, opts)}
+  rescue
+    error in [Error, FetchError, ParseError, ArgumentError] ->
+      {:error, error}
   end
 
   @doc """
@@ -289,38 +122,39 @@ defmodule GoogleNews do
   @param boolean helper: When True helps with URL quoting.
   @param binary when: Sets a time range for the artiles that can be found.
   """
-  @spec search(String.t(), list) :: {:ok, parsed_feed} | {:error, term}
-  def search(query, opts \\ []) when is_binary(query) and is_list(opts) do
-    try do
-      proxy = Keyword.get(opts, :proxy)
-      scraping_bee = Keyword.get(opts, :scraping_bee)
+  @spec search!(binary, list) :: Feed.t()
+  def search!(query, opts \\ []) when is_binary(query) and is_list(opts) do
+    proxy = Keyword.get(opts, :proxy)
+    scraping_bee = Keyword.get(opts, :scraping_bee)
 
-      query =
-        process_query(
-          query,
-          Keyword.get(opts, :helper, true),
-          Keyword.get(opts, :when),
-          Keyword.get(opts, :from),
-          Keyword.get(opts, :to)
-        )
+    query =
+      Search.query!(
+        query,
+        Keyword.get(opts, :helper, true),
+        Keyword.get(opts, :when),
+        Keyword.get(opts, :from),
+        Keyword.get(opts, :to)
+      )
 
-      data =
-        parse_feed(
-          @base_url <> "/search?q=#{query}&" <> ceid(opts),
-          proxy,
-          scraping_bee
-        )
+    data =
+      ("/search?q=#{query}&" <> ceid(opts))
+      |> Fetch.feed!(proxy, scraping_bee)
+      |> Parse.feed!()
 
-      data = %{data | entries: add_sub_articles(data.entries)}
-
-      {:ok, data}
-    catch
-      _, reason -> {:error, reason}
-    end
+    %{data | entries: SubArticles.merge!(data.entries)}
   end
 
-  @spec search!(String.t(), list) :: parsed_feed
-  def search!(query, opts \\ []) when is_binary(query) and is_list(opts) do
-    search(query, opts) |> GoogleNews.ErrorHandler.bang!()
+  @doc """
+  Return a list of all articles given a full-text search parameter, a country and a language.
+
+  @param boolean helper: When True helps with URL quoting.
+  @param binary when: Sets a time range for the artiles that can be found.
+  """
+  @spec search(binary, list) :: {:ok, Feed.t()} | {:error, term}
+  def search(query, opts \\ []) when is_binary(query) and is_list(opts) do
+    {:ok, search!(query, opts)}
+  rescue
+    error in [Error, FetchError, ParseError, ArgumentError] ->
+      {:error, error}
   end
 end
