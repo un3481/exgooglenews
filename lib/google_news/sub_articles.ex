@@ -34,12 +34,10 @@ defmodule GoogleNews.SubArticles do
   @doc """
   Merge Sub Articles to entries
   """
-  @spec merge!(list) :: list
-  def merge!(entries) when is_list(entries) do
-    Enum.map(entries, fn entry ->
-      summary = Map.get(entry, :summary)
-      sub_articles = if is_binary(summary), do: parser(summary), else: []
-      Map.put(entry, :sub_articles, sub_articles)
-    end)
+  @spec merge!(map) :: map
+  def merge!(entry) when is_map(entry) do
+    summary = Map.get(entry, :summary)
+    sub_articles = if is_binary(summary), do: parser(summary), else: []
+    Map.put(entry, :sub_articles, sub_articles)
   end
 end

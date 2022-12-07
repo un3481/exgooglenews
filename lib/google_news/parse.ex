@@ -54,6 +54,7 @@ end
 
 defmodule GoogleNews.Parse do
   alias GoogleNews.{Feed, FeedInfo, Entry}
+  alias GoogleNews.{SubArticles}
   alias GoogleNews.{Error, ParseError}
 
   # Separate FeederEx Feed from Entries
@@ -67,7 +68,9 @@ defmodule GoogleNews.Parse do
       map
       |> Map.get(:entries)
       |> Enum.map(fn item ->
-        Map.merge(item, %{__struct__: Entry})
+        item
+        |> Map.merge(%{__struct__: Entry})
+        |> SubArticles.merge!()
       end)
 
     %Feed{feed: feed, entries: entries}

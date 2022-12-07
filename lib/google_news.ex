@@ -16,19 +16,16 @@ defmodule GoogleNews do
 
   alias GoogleNews.Feed
   alias GoogleNews.{Error, FetchError, ParseError}
-  alias GoogleNews.{Fetch, Parse, SubArticles, Search}
+  alias GoogleNews.{Fetch, Parse, Search}
 
   @doc """
   Return a list of all articles from the main page of Google News given a country and a language.
   """
   @spec top_news!(list) :: Feed.t()
   def top_news!(opts \\ []) when is_list(opts) do
-    data =
-      ""
-      |> Fetch.fetch!(opts)
-      |> Parse.parse!()
-
-    %{data | entries: SubArticles.merge!(data.entries)}
+    ""
+    |> Fetch.fetch!(opts)
+    |> Parse.parse!()
   end
 
   @doc """
@@ -54,12 +51,9 @@ defmodule GoogleNews do
         do: "/headlines/section/topic/#{u_topic}",
         else: "/topics/#{topic}"
 
-    data =
-      url
-      |> Fetch.fetch!(opts)
-      |> Parse.parse!()
-
-    %{data | entries: SubArticles.merge!(data.entries)}
+    url
+    |> Fetch.fetch!(opts)
+    |> Parse.parse!()
   end
 
   @doc """
@@ -78,12 +72,9 @@ defmodule GoogleNews do
   """
   @spec geo_headlines!(binary, list) :: Feed.t()
   def geo_headlines!(geo, opts \\ []) when is_binary(geo) and is_list(opts) do
-    data =
-      "/headlines/section/geo/#{geo}"
-      |> Fetch.fetch!(opts)
-      |> Parse.parse!()
-
-    %{data | entries: SubArticles.merge!(data.entries)}
+    "/headlines/section/geo/#{geo}"
+    |> Fetch.fetch!(opts)
+    |> Parse.parse!()
   end
 
   @doc """
@@ -107,12 +98,9 @@ defmodule GoogleNews do
   def search!(query, opts \\ []) when is_binary(query) and is_list(opts) do
     query = Search.query!(query, opts)
 
-    data =
-      "/search?q=#{query}"
-      |> Fetch.fetch!(opts)
-      |> Parse.parse!()
-
-    %{data | entries: SubArticles.merge!(data.entries)}
+    "/search?q=#{query}"
+    |> Fetch.fetch!(opts)
+    |> Parse.parse!()
   end
 
   @doc """

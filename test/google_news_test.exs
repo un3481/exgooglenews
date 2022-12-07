@@ -2,14 +2,14 @@ defmodule GoogleNewsTest do
   use ExUnit.Case
   doctest GoogleNews
 
+  @example_proxy {:http, "localhost", 8899, []}
+  @example_scraping_bee_token "123456789abc"
+  @scraping_bee_url "https://app.scrapingbee.com/api/v1/"
+
   @top_news_url "https://news.google.com/rss?ceid=US%3Aen&hl=en&gl=US"
   @topic_headlines_url "https://news.google.com/rss/headlines/section/topic/SPORTS?ceid=US%3Aen&hl=en&gl=US"
   @geo_headlines_url "https://news.google.com/rss/headlines/section/geo/Los%20Angeles?ceid=US%3Aen&hl=en&gl=US"
   @search_url "https://news.google.com/rss/search?q=boeing+after%3A2022-02-24&ceid=US%3Aen&hl=en&gl=US"
-
-  @example_proxy {:http, "localhost", 8899, []}
-  @example_scraping_bee_token "123456789abc"
-  @scraping_bee_url "https://app.scrapingbee.com/api/v1/"
 
   test "error on using both proxy & scraping_bee" do
     error = %ArgumentError{
@@ -63,28 +63,6 @@ defmodule GoogleNewsTest do
     assert {:error, error} == GoogleNews.top_news()
   end
 
-  test "ok on 200 for top_news" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @top_news_url
-      assert opts == []
-
-      {:ok,
-       %Req.Response{
-         status: 200,
-         body: File.read!("test/documents/top_news.rss")
-       }}
-    end)
-
-    {:ok, %{feed: feed, entries: entries}} = GoogleNews.top_news()
-
-    assert feed.__struct__ == GoogleNews.FeedInfo
-    assert feed.title == "Top stories - Google News"
-
-    Enum.each(entries, fn entry ->
-      assert entry.__struct__ == GoogleNews.Entry
-    end)
-  end
-
   test "error on 404 for top_news using proxy" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @top_news_url
@@ -122,6 +100,32 @@ defmodule GoogleNewsTest do
     assert {:error, error} == GoogleNews.top_news(scraping_bee: @example_scraping_bee_token)
   end
 
+  test "ok on 200 for top_news" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == @top_news_url
+      assert opts == []
+
+      {:ok,
+       %Req.Response{
+         status: 200,
+         body: File.read!("test/documents/top_news.rss")
+       }}
+    end)
+
+    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} = GoogleNews.top_news()
+
+    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.title == "Top stories - Google News"
+
+    Enum.each(entries, fn entry ->
+      assert entry.__struct__ == GoogleNews.Entry
+
+      Enum.each(entry.sub_articles, fn sub_article ->
+        assert sub_article.__struct__ == GoogleNews.SubArticle
+      end)
+    end)
+  end
+
   test "error on 404 for topic_headlines" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @topic_headlines_url
@@ -135,6 +139,32 @@ defmodule GoogleNewsTest do
     }
 
     assert {:error, error} == GoogleNews.topic_headlines("Sports")
+  end
+
+  test "ok on 200 for topic_headlines" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == @topic_headlines_url
+      assert opts == []
+
+      {:ok,
+       %Req.Response{
+         status: 200,
+         body: File.read!("test/documents/topic_headlines.rss")
+       }}
+    end)
+
+    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} = GoogleNews.topic_headlines("Sports")
+
+    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.title == "Sports - Latest - Google News"
+
+    Enum.each(entries, fn entry ->
+      assert entry.__struct__ == GoogleNews.Entry
+
+      Enum.each(entry.sub_articles, fn sub_article ->
+        assert sub_article.__struct__ == GoogleNews.SubArticle
+      end)
+    end)
   end
 
   test "error on 404 for geo_headlines" do
@@ -152,7 +182,34 @@ defmodule GoogleNewsTest do
     assert {:error, error} == GoogleNews.geo_headlines("Los Angeles")
   end
 
-  test "error on argument to search query" do
+  test "ok on 200 for geo_headlines" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == @geo_headlines_url
+      assert opts == []
+
+      {:ok,
+       %Req.Response{
+         status: 200,
+         body: File.read!("test/documents/geo_headlines.rss")
+       }}
+    end)
+
+    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} =
+      GoogleNews.geo_headlines("Los Angeles")
+
+    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.title == "Los Angeles - Latest - Google News"
+
+    Enum.each(entries, fn entry ->
+      assert entry.__struct__ == GoogleNews.Entry
+
+      Enum.each(entry.sub_articles, fn sub_article ->
+        assert sub_article.__struct__ == GoogleNews.SubArticle
+      end)
+    end)
+  end
+
+  test "error on argument to search" do
     error = %ArgumentError{
       message: "cannot parse ~D[2022-02-24] as date, reason: :invalid_format"
     }
@@ -183,17 +240,22 @@ defmodule GoogleNewsTest do
       {:ok,
        %Req.Response{
          status: 200,
-         body: File.read!("test/documents/search-boeing-from20220224.rss")
+         body: File.read!("test/documents/search.rss")
        }}
     end)
 
-    {:ok, %{feed: feed, entries: entries}} = GoogleNews.search("boeing", from: "2022-02-24")
+    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} =
+      GoogleNews.search("boeing", from: "2022-02-24")
 
     assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "\"boeing after:2022-02-24\" - Google News"
 
     Enum.each(entries, fn entry ->
       assert entry.__struct__ == GoogleNews.Entry
+
+      Enum.each(entry.sub_articles, fn sub_article ->
+        assert sub_article.__struct__ == GoogleNews.SubArticle
+      end)
     end)
   end
 end
