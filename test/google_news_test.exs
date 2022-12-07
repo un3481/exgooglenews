@@ -2,12 +2,14 @@ defmodule GoogleNewsTest do
   use ExUnit.Case
   doctest GoogleNews
 
-  @scraping_bee_url "https://app.scrapingbee.com/api/v1/"
-  @top_news_url "https://news.google.com/rss?ceid=US:en&hl=en&gl=US"
-  @boeing_search_url "https://news.google.com/rss/search?q=boeing%20after:2022-02-24&ceid=US:en&hl=en&gl=US"
+  @top_news_url "https://news.google.com/rss?ceid=US%3Aen&hl=en&gl=US"
+  @topic_headlines_url "https://news.google.com/rss/headlines/section/topic/SPORTS?ceid=US%3Aen&hl=en&gl=US"
+  @geo_headlines_url "https://news.google.com/rss/headlines/section/geo/Los%20Angeles?ceid=US%3Aen&hl=en&gl=US"
+  @search_url "https://news.google.com/rss/search?q=boeing+after%3A2022-02-24&ceid=US%3Aen&hl=en&gl=US"
 
   @example_proxy {:http, "localhost", 8899, []}
   @example_scraping_bee_token "123456789abc"
+  @scraping_bee_url "https://app.scrapingbee.com/api/v1/"
 
   test "error on using both proxy & scraping_bee" do
     error = %ArgumentError{
@@ -63,8 +65,8 @@ defmodule GoogleNewsTest do
 
   test "ok on 200 for top_news" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert @top_news_url == url
-      assert [] == opts
+      assert url == @top_news_url
+      assert opts == []
 
       {:ok,
        %Req.Response{
@@ -120,6 +122,36 @@ defmodule GoogleNewsTest do
     assert {:error, error} == GoogleNews.top_news(scraping_bee: @example_scraping_bee_token)
   end
 
+  test "error on 404 for topic_headlines" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == @topic_headlines_url
+      assert opts == []
+
+      {:ok, %Req.Response{status: 404}}
+    end)
+
+    error = %GoogleNews.FetchError{
+      value: %Req.Response{status: 404}
+    }
+
+    assert {:error, error} == GoogleNews.topic_headlines("Sports")
+  end
+
+  test "error on 404 for geo_headlines" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == @geo_headlines_url
+      assert opts == []
+
+      {:ok, %Req.Response{status: 404}}
+    end)
+
+    error = %GoogleNews.FetchError{
+      value: %Req.Response{status: 404}
+    }
+
+    assert {:error, error} == GoogleNews.geo_headlines("Los Angeles")
+  end
+
   test "error on argument to search query" do
     error = %ArgumentError{
       message: "cannot parse ~D[2022-02-24] as date, reason: :invalid_format"
@@ -130,7 +162,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for search" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @boeing_search_url
+      assert url == @search_url
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -145,7 +177,7 @@ defmodule GoogleNewsTest do
 
   test "ok on 200 for search" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @boeing_search_url
+      assert url == @search_url
       assert opts == []
 
       {:ok,
