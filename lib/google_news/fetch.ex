@@ -78,7 +78,8 @@ defmodule GoogleNews.Fetch do
       |> Kernel.++(ceid)
       |> URI.encode_query()
 
-    %{uri | query: query}
+    uri
+    |> Map.put(:query, query)
     |> URI.to_string()
   end
 
