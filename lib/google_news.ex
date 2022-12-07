@@ -15,8 +15,8 @@ defmodule GoogleNews do
   ]
 
   alias GoogleNews.Feed
-  alias GoogleNews.{Error, FetchError, ParseError}
   alias GoogleNews.{Fetch, Parse, Search}
+  alias GoogleNews.{Error, FetchError, ParseError}
 
   @doc """
   Return a list of all articles from the main page of Google News given a country and a language.

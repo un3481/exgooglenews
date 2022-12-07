@@ -1,43 +1,3 @@
-defmodule GoogleNews.FeedInfo do
-  defstruct author: nil,
-            id: nil,
-            image: nil,
-            link: nil,
-            language: nil,
-            subtitle: nil,
-            summary: nil,
-            title: nil,
-            updated: nil,
-            url: nil
-end
-
-defmodule GoogleNews.Entry do
-  defstruct author: nil,
-            categories: [],
-            duration: nil,
-            enclosure: nil,
-            id: nil,
-            image: nil,
-            link: nil,
-            subtitle: nil,
-            summary: nil,
-            title: nil,
-            updated: nil,
-            sub_articles: []
-end
-
-defmodule GoogleNews.Feed do
-  defstruct feed: %GoogleNews.FeedInfo{}, entries: []
-
-  @typedoc """
-  Struct that contains Parsed RSS Feed information.
-  """
-  @type t :: %__MODULE__{
-          feed: GoogleNews.FeedInfo.t(),
-          entries: [GoogleNews.Entry.t()]
-        }
-end
-
 defmodule GoogleNews.ParseError do
   @type t :: %__MODULE__{message: String.t(), value: any}
 
@@ -53,9 +13,37 @@ defmodule GoogleNews.ParseError do
 end
 
 defmodule GoogleNews.Parse do
-  alias GoogleNews.{Feed, FeedInfo, Entry}
-  alias GoogleNews.{SubArticles}
+  alias GoogleNews.{Feed, FeedInfo, Entry, SubArticle}
   alias GoogleNews.{Error, ParseError}
+
+  # Return subarticles from the main and topic feeds.
+  defp sub_articles_parse(text) do
+    text
+    |> Floki.parse_document!()
+    |> Floki.find("li")
+    |> Enum.map(fn li ->
+      a = Floki.find(li, "a")
+      font = Floki.find(li, "font")
+
+      %SubArticle{
+        title: Floki.text(a),
+        url: Floki.attribute(a, "href") |> Enum.at(0),
+        publisher: Floki.text(font)
+      }
+    end)
+  end
+
+  # Merge subarticles to entry
+  defp sub_articles_merge(entry) do
+    summary = Map.get(entry, :summary)
+
+    sub_articles =
+      if is_binary(summary),
+        do: sub_articles_parse(summary),
+        else: []
+
+    Map.put(entry, :sub_articles, sub_articles)
+  end
 
   # Separate FeederEx Feed from Entries
   defp format_map({:ok, map, _}) when is_map(map) do
@@ -70,7 +58,7 @@ defmodule GoogleNews.Parse do
       |> Enum.map(fn item ->
         item
         |> Map.merge(%{__struct__: Entry})
-        |> SubArticles.merge!()
+        |> sub_articles_merge()
       end)
 
     %Feed{feed: feed, entries: entries}
