@@ -4,7 +4,7 @@ defmodule GoogleNews.Error do
   defexception message: nil, value: nil
 
   def message(%{message: nil, value: value}) do
-    "GoogleNews found an error: #{inspect(value)}"
+    "google_news found an error: #{inspect(value)}"
   end
 
   def message(%{message: message}) do

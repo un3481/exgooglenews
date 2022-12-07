@@ -13,7 +13,7 @@ defmodule GoogleNewsTest do
 
   test "error on using both proxy & scraping_bee" do
     error = %ArgumentError{
-      message: "Pick either a proxy or ScrapingBee. Not both!"
+      message: "pick either a proxy or scraping_bee, not both"
     }
 
     assert {:error, error} ==

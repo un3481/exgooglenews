@@ -4,7 +4,7 @@ defmodule GoogleNews.FetchError do
   defexception message: nil, value: nil
 
   def message(%{message: nil, value: value}) do
-    "Could not fetch the resource: #{inspect(value)}"
+    "could not fetch the resource: #{inspect(value)}"
   end
 
   def message(%{message: message}) do
@@ -96,7 +96,7 @@ defmodule GoogleNews.Fetch do
   end
 
   defp request(_, proxy, scraping_bee) when not is_nil(proxy) and not is_nil(scraping_bee) do
-    raise(ArgumentError, message: "Pick either a proxy or ScrapingBee. Not both!")
+    raise(ArgumentError, message: "pick either a proxy or scraping_bee, not both")
   end
 
   defp request(uri, proxy, nil) when not is_nil(proxy) do
@@ -120,11 +120,11 @@ defmodule GoogleNews.Fetch do
     http_client() |> apply(:post, args)
   end
 
-  # Check response for RSS Feed.
-  defp check_response({:ok, %{status: 200, body: body}}), do: body
-  defp check_response({:ok, response}), do: raise(FetchError, value: response)
-  defp check_response({:error, error}), do: raise(FetchError, value: error)
-  defp check_response(unknown), do: raise(Error, message: "Invalid return", value: unknown)
+  # Handle response for RSS Feed.
+  defp handle_response({:ok, %{status: 200, body: body}}), do: body
+  defp handle_response({:ok, response}), do: raise(FetchError, value: response)
+  defp handle_response({:error, error}), do: raise(FetchError, value: error)
+  defp handle_response(unknown), do: raise(Error, message: "invalid return", value: unknown)
 
   @doc """
   Retrieve RSS Feed using provided methods.
@@ -136,6 +136,6 @@ defmodule GoogleNews.Fetch do
     |> merge_base()
     |> add_ceid(opts)
     |> request(opts[:proxy], opts[:scraping_bee])
-    |> check_response()
+    |> handle_response()
   end
 end

@@ -4,7 +4,7 @@ defmodule GoogleNews.ParseError do
   defexception message: nil, value: nil
 
   def message(%{message: nil, value: value}) do
-    "Could not parse the feed: #{inspect(value)}"
+    "could not parse the feed: #{inspect(value)}"
   end
 
   def message(%{message: message}) do
@@ -46,7 +46,7 @@ defmodule GoogleNews.Parse do
   end
 
   # Separate FeederEx Feed from Entries
-  defp format_map({:ok, map, _}) when is_map(map) do
+  defp handle_feed({:ok, map, _}) when is_map(map) do
     feed =
       map
       |> Map.delete(:entries)
@@ -64,9 +64,9 @@ defmodule GoogleNews.Parse do
     %Feed{feed: feed, entries: entries}
   end
 
-  defp format_map({:fatal_error, _, reason, _, _}), do: raise(ParseError, message: reason)
-  defp format_map({:error, reason}), do: raise(ParseError, message: reason)
-  defp format_map(unknown), do: raise(Error, message: "Invalid return", value: unknown)
+  defp handle_feed({:fatal_error, _, reason, _, _}), do: raise(ParseError, message: reason)
+  defp handle_feed({:error, reason}), do: raise(ParseError, message: reason)
+  defp handle_feed(unknown), do: raise(Error, message: "invalid return", value: unknown)
 
   @doc """
   Parse RSS Feed
@@ -75,6 +75,6 @@ defmodule GoogleNews.Parse do
   def parse!(rss) when is_binary(rss) do
     rss
     |> FeederEx.parse()
-    |> format_map()
+    |> handle_feed()
   end
 end
