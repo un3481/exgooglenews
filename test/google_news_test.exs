@@ -115,6 +115,39 @@ defmodule GoogleNewsTest do
     assert {:error, error} == result
   end
 
+  test "ok on 200 for fetch non-existent feed" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == "#{@base_url}/foo/bar?#{@ceid_en_us}"
+      assert opts == []
+
+      {:ok,
+       %Req.Response{
+         status: 200,
+         body: File.read!("test/documents/not_found.rss")
+       }}
+    end)
+
+    result =
+      try do
+        GoogleNews.Fetch.fetch!("foo/bar")
+      rescue
+        _ -> nil
+      end
+
+    assert result != nil
+
+    %GoogleNews.Feed{feed: feed, entries: entries} = GoogleNews.Parse.parse!(result)
+
+    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.title == "Google News"
+    assert Enum.count(entries) == 1
+
+    entry = Enum.at(entries, 0)
+
+    assert entry.__struct__ == GoogleNews.Entry
+    assert entry.title == "This feed is not available."
+  end
+
   test "error on using both proxy & scraping_bee" do
     error = %ArgumentError{
       message: "pick either a proxy or scraping_bee, not both"

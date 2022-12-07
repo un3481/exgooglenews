@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+    <channel>
+        <generator>NFE/5.0</generator>
+        <title>Google News</title>
+        <link>https://news.google.com/?ceid=US:en&amp;hl=en-US&amp;gl=US</link>
+        <language>en-US</language>
+        <webMaster>news-webmaster@google.com</webMaster>
+        <copyright>2022 Google Inc.</copyright>
+        <lastBuildDate>Wed, 07 Dec 2022 23:01:08 GMT</lastBuildDate>
+        <description>Google News</description>
+        <item>
+            <title>This feed is not available.</title>
+            <link>https://news.google.com/?fr_unfepa=1&amp;oc=5</link>
+            <guid isPermaLink="false">news:unfepa</guid>
+            <description>For the latest headlines visit &lt;a href="https://news.google.com/?oc=5" target="_blank"&gt;Google News&lt;/a&gt;.</description>
+        </item>
+    </channel>
+</rss>
