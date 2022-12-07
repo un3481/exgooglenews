@@ -1,24 +1,32 @@
 defmodule GoogleNews.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @url "https://github.com/un3481/exgooglenews"
+  @maintainers ["Anthony Freitas"]
+
   def project do
     [
+      name: "Google News",
       app: :google_news,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.12",
-      start_permanent: Mix.env() == :prod,
-      deps: deps()
+      package: package(),
+      source_url: @url,
+      maintainers: @maintainers,
+      description: "An Elixir wrapper of the Google News RSS feed.",
+      homepage_url: @url,
+      deps: deps(),
+      docs: docs()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:req, "~> 0.3.2"},
@@ -31,6 +39,24 @@ defmodule GoogleNews.MixProject do
 
       # test
       {:mox, "~> 0.5.2", only: :test}
+    ]
+  end
+
+  defp docs do
+    [
+      extras: ["README.md"],
+      main: "readme",
+      source_ref: "v#{@version}",
+      source_url: @url
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: @maintainers,
+      licenses: ["MIT"],
+      links: %{github: @url},
+      files: ~w(lib) ++ ~w(LICENSE mix.exs README.md)
     ]
   end
 end
