@@ -6,10 +6,13 @@ defmodule GoogleNewsTest do
   @example_scraping_bee_token "123456789abc"
   @scraping_bee_url "https://app.scrapingbee.com/api/v1/"
 
-  @top_news_url "https://news.google.com/rss?ceid=US%3Aen&hl=en&gl=US"
-  @topic_headlines_url "https://news.google.com/rss/headlines/section/topic/SPORTS?ceid=US%3Aen&hl=en&gl=US"
-  @geo_headlines_url "https://news.google.com/rss/headlines/section/geo/Los%20Angeles?ceid=US%3Aen&hl=en&gl=US"
-  @search_url "https://news.google.com/rss/search?q=boeing+after%3A2022-02-24&ceid=US%3Aen&hl=en&gl=US"
+  @base_url "https://news.google.com/rss"
+  @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
+
+  @url_top_news "#{@base_url}?#{@ceid_en_us}"
+  @url_topic_headlines "#{@base_url}/headlines/section/topic/SPORTS?#{@ceid_en_us}"
+  @url_geo_headlines "#{@base_url}/headlines/section/geo/Los%20Angeles?#{@ceid_en_us}"
+  @url_search "#{@base_url}/search?q=boeing+after%3A2022-02-24&#{@ceid_en_us}"
 
   test "error on fetch invalid url" do
     error = %ArgumentError{message: "invalid uri"}
@@ -26,7 +29,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for fetch (1)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == "http://news.google.com/rss/example?ceid=US%3Aen&hl=en&gl=US"
+      assert url == "http://news.google.com/rss/example?#{@ceid_en_us}"
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -38,7 +41,7 @@ defmodule GoogleNewsTest do
 
     result =
       try do
-        {:ok, GoogleNews.Fetch.fetch!("http://news.google.com/rss/example")}
+        GoogleNews.Fetch.fetch!("http://news.google.com/rss/example")
       rescue
         e -> {:error, e}
       end
@@ -48,7 +51,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for fetch (2)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == "https://news.google.com/rss/example/foo?ceid=US%3Aen&hl=en&gl=US"
+      assert url == "#{@base_url}/example/foo?#{@ceid_en_us}"
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -60,7 +63,7 @@ defmodule GoogleNewsTest do
 
     result =
       try do
-        {:ok, GoogleNews.Fetch.fetch!("example/foo")}
+        GoogleNews.Fetch.fetch!("example/foo")
       rescue
         e -> {:error, e}
       end
@@ -70,7 +73,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for fetch (3)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == "https://news.google.com/rss/example/bar?ceid=US%3Aen&hl=en&gl=US"
+      assert url == "#{@base_url}/example/bar?#{@ceid_en_us}"
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -82,7 +85,7 @@ defmodule GoogleNewsTest do
 
     result =
       try do
-        {:ok, GoogleNews.Fetch.fetch!("rss/example/bar")}
+        GoogleNews.Fetch.fetch!("rss/example/bar")
       rescue
         e -> {:error, e}
       end
@@ -92,9 +95,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for fetch (4)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url ==
-               "https://news.google.com/rss/example?foo=42&bar=test&ex=foo%3Abar&ceid=US%3Aen&hl=en&gl=US"
-
+      assert url == "#{@base_url}/example?foo=42&bar=test&ex=foo%3Abar&#{@ceid_en_us}"
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -106,7 +107,7 @@ defmodule GoogleNewsTest do
 
     result =
       try do
-        {:ok, GoogleNews.Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")}
+        GoogleNews.Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")
       rescue
         e -> {:error, e}
       end
@@ -120,12 +121,15 @@ defmodule GoogleNewsTest do
     }
 
     assert {:error, error} ==
-             GoogleNews.top_news(proxy: @example_proxy, scraping_bee: @example_scraping_bee_token)
+             GoogleNews.top_news(
+               proxy: @example_proxy,
+               scraping_bee: @example_scraping_bee_token
+             )
   end
 
   test "error on Req" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @top_news_url
+      assert url == @url_top_news
       assert opts == []
 
       {:error, :req_error}
@@ -138,7 +142,7 @@ defmodule GoogleNewsTest do
 
   test "error on invalid RSS" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @top_news_url
+      assert url == @url_top_news
       assert opts == []
 
       {:ok, %Req.Response{status: 200, body: ""}}
@@ -153,7 +157,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for top_news" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @top_news_url
+      assert url == @url_top_news
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -168,7 +172,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for top_news using proxy" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @top_news_url
+      assert url == @url_top_news
       assert opts == [connect_options: [proxy: @example_proxy]]
 
       {:ok, %Req.Response{status: 404, body: :proxy}}
@@ -189,7 +193,7 @@ defmodule GoogleNewsTest do
                json: %{
                  api_key: @example_scraping_bee_token,
                  render_js: "false",
-                 url: @top_news_url
+                 url: @url_top_news
                }
              ]
 
@@ -205,7 +209,7 @@ defmodule GoogleNewsTest do
 
   test "ok on 200 for top_news" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @top_news_url
+      assert url == @url_top_news
       assert opts == []
 
       {:ok,
@@ -219,6 +223,7 @@ defmodule GoogleNewsTest do
 
     assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "Top stories - Google News"
+    assert Enum.count(entries) == 37
 
     Enum.each(entries, fn entry ->
       assert entry.__struct__ == GoogleNews.Entry
@@ -231,7 +236,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for topic_headlines" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @topic_headlines_url
+      assert url == @url_topic_headlines
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -246,7 +251,7 @@ defmodule GoogleNewsTest do
 
   test "ok on 200 for topic_headlines" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @topic_headlines_url
+      assert url == @url_topic_headlines
       assert opts == []
 
       {:ok,
@@ -260,6 +265,7 @@ defmodule GoogleNewsTest do
 
     assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "Sports - Latest - Google News"
+    assert Enum.count(entries) == 70
 
     Enum.each(entries, fn entry ->
       assert entry.__struct__ == GoogleNews.Entry
@@ -272,7 +278,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for geo_headlines" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @geo_headlines_url
+      assert url == @url_geo_headlines
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -287,7 +293,7 @@ defmodule GoogleNewsTest do
 
   test "ok on 200 for geo_headlines" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @geo_headlines_url
+      assert url == @url_geo_headlines
       assert opts == []
 
       {:ok,
@@ -302,6 +308,7 @@ defmodule GoogleNewsTest do
 
     assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "Los Angeles - Latest - Google News"
+    assert Enum.count(entries) == 63
 
     Enum.each(entries, fn entry ->
       assert entry.__struct__ == GoogleNews.Entry
@@ -322,7 +329,7 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for search" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @search_url
+      assert url == @url_search
       assert opts == []
 
       {:ok, %Req.Response{status: 404}}
@@ -337,7 +344,7 @@ defmodule GoogleNewsTest do
 
   test "ok on 200 for search" do
     Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @search_url
+      assert url == @url_search
       assert opts == []
 
       {:ok,
@@ -352,6 +359,7 @@ defmodule GoogleNewsTest do
 
     assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "\"boeing after:2022-02-24\" - Google News"
+    assert Enum.count(entries) == 97
 
     Enum.each(entries, fn entry ->
       assert entry.__struct__ == GoogleNews.Entry
