@@ -77,11 +77,11 @@ defmodule GoogleNewsTest do
 
     {:ok, %{feed: feed, entries: entries}} = GoogleNews.top_news()
 
-    assert feed.__struct__ == FeederEx.Feed
+    assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "Top stories - Google News"
 
     Enum.each(entries, fn entry ->
-      assert entry.__struct__ == FeederEx.Entry
+      assert entry.__struct__ == GoogleNews.Entry
     end)
   end
 
@@ -189,11 +189,11 @@ defmodule GoogleNewsTest do
 
     {:ok, %{feed: feed, entries: entries}} = GoogleNews.search("boeing", from: "2022-02-24")
 
-    assert feed.__struct__ == FeederEx.Feed
+    assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "\"boeing after:2022-02-24\" - Google News"
 
     Enum.each(entries, fn entry ->
-      assert entry.__struct__ == FeederEx.Entry
+      assert entry.__struct__ == GoogleNews.Entry
     end)
   end
 end

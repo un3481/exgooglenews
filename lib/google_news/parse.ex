@@ -1,3 +1,43 @@
+defmodule GoogleNews.FeedInfo do
+  defstruct author: nil,
+            id: nil,
+            image: nil,
+            link: nil,
+            language: nil,
+            subtitle: nil,
+            summary: nil,
+            title: nil,
+            updated: nil,
+            url: nil
+end
+
+defmodule GoogleNews.Entry do
+  defstruct author: nil,
+            categories: [],
+            duration: nil,
+            enclosure: nil,
+            id: nil,
+            image: nil,
+            link: nil,
+            subtitle: nil,
+            summary: nil,
+            title: nil,
+            updated: nil,
+            sub_articles: []
+end
+
+defmodule GoogleNews.Feed do
+  defstruct feed: %GoogleNews.FeedInfo{}, entries: []
+
+  @typedoc """
+  Struct that contains Parsed RSS Feed information.
+  """
+  @type t :: %__MODULE__{
+          feed: GoogleNews.FeedInfo.t(),
+          entries: [GoogleNews.Entry.t()]
+        }
+end
+
 defmodule GoogleNews.ParseError do
   @type t :: %__MODULE__{message: String.t(), value: any}
 
@@ -12,27 +52,25 @@ defmodule GoogleNews.ParseError do
   end
 end
 
-defmodule GoogleNews.Feed do
-  defstruct feed: nil, entries: []
-
-  @typedoc """
-  Struct that contains Parsed RSS Feed information.
-  """
-  @type t :: %__MODULE__{
-          feed: FeederEx.Feed.t(),
-          entries: [FeederEx.Entry.t()]
-        }
-end
-
 defmodule GoogleNews.Parse do
-  alias GoogleNews.{Feed, Error, ParseError}
+  alias GoogleNews.{Feed, FeedInfo, Entry}
+  alias GoogleNews.{Error, ParseError}
 
   # Separate FeederEx Feed from Entries
   defp format_map({:ok, map, _}) when is_map(map) do
-    %Feed{
-      feed: Map.delete(map, :entries),
-      entries: Map.get(map, :entries)
-    }
+    feed =
+      map
+      |> Map.delete(:entries)
+      |> Map.merge(%{__struct__: FeedInfo})
+
+    entries =
+      map
+      |> Map.get(:entries)
+      |> Enum.map(fn item ->
+        Map.merge(item, %{__struct__: Entry})
+      end)
+
+    %Feed{feed: feed, entries: entries}
   end
 
   defp format_map({:fatal_error, _, reason, _, _}), do: raise(ParseError, message: reason)
