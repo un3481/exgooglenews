@@ -52,10 +52,10 @@ defmodule GoogleNews.Fetch do
     pfx_ok = uri.path in pfx_eq or String.starts_with?(uri.path || "", pfx_sw)
 
     sep = if sep_ok, do: "", else: "/"
-    pfx = if pfx_ok, do: "", else: "/rss#{sep}"
+    pfx = if pfx_ok, do: "", else: "/rss"
 
     uri
-    |> Map.put(:path, "#{pfx}#{uri.path}")
+    |> Map.put(:path, "#{pfx}#{sep}#{uri.path}")
     |> Map.put(:authority, "news.google.com")
     |> Map.put(:host, "news.google.com")
   end

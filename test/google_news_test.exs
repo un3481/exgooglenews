@@ -70,8 +70,30 @@ defmodule GoogleNewsTest do
 
   test "error on 404 for fetch (3)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == "https://news.google.com/rss/example/bar?ceid=US%3Aen&hl=en&gl=US"
+      assert opts == []
+
+      {:ok, %Req.Response{status: 404}}
+    end)
+
+    error = %GoogleNews.FetchError{
+      value: %Req.Response{status: 404}
+    }
+
+    result =
+      try do
+        {:ok, GoogleNews.Fetch.fetch!("rss/example/bar")}
+      rescue
+        e -> {:error, e}
+      end
+
+    assert {:error, error} == result
+  end
+
+  test "error on 404 for fetch (4)" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
       assert url ==
-               "https://news.google.com/rss/example?foo=45&bar=web&ex=foo%3Abar&ceid=US%3Aen&hl=en&gl=US"
+               "https://news.google.com/rss/example?foo=42&bar=test&ex=foo%3Abar&ceid=US%3Aen&hl=en&gl=US"
 
       assert opts == []
 
@@ -84,7 +106,7 @@ defmodule GoogleNewsTest do
 
     result =
       try do
-        {:ok, GoogleNews.Fetch.fetch!("example?foo=45&bar=web&ex=foo:bar")}
+        {:ok, GoogleNews.Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")}
       rescue
         e -> {:error, e}
       end
