@@ -173,8 +173,6 @@ defmodule GoogleNewsTest do
     assert {:error, error} == GoogleNews.top_news()
   end
 
-
-
   test "error on 404 for top_news" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_top_news
@@ -263,11 +261,10 @@ defmodule GoogleNewsTest do
       assert opts == []
 
       {:ok,
-        %Req.Response{
-          status: 200,
-          body: "<rss version=\\\"2.0\\\"></rss>"
-        }
-      }
+       %Req.Response{
+         status: 200,
+         body: "<rss version=\\\"2.0\\\"></rss>"
+       }}
     end)
 
     error = %GoogleNews.ParseError{
@@ -283,11 +280,10 @@ defmodule GoogleNewsTest do
       assert opts == []
 
       {:ok,
-        %Req.Response{
-          status: 200,
-          body: "<rss version=\"2.0\"></rss>"
-        }
-      }
+       %Req.Response{
+         status: 200,
+         body: "<rss version=\"2.0\"></rss>"
+       }}
     end)
 
     assert {:ok, %GoogleNews.Feed{}} == GoogleNews.top_news()
