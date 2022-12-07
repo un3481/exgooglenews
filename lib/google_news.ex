@@ -3,6 +3,10 @@ defmodule GoogleNews do
   Documentation for `GoogleNews`.
   """
 
+  alias GoogleNews.Feed
+  alias GoogleNews.{Fetch, Parse, Search}
+  alias GoogleNews.{Error, FetchError, ParseError}
+
   @headlines [
     "WORLD",
     "NATION",
@@ -13,10 +17,6 @@ defmodule GoogleNews do
     "SPORTS",
     "HEALTH"
   ]
-
-  alias GoogleNews.Feed
-  alias GoogleNews.{Fetch, Parse, Search}
-  alias GoogleNews.{Error, FetchError, ParseError}
 
   @doc """
   Return a list of all articles from the main page of Google News given a country and a language.
