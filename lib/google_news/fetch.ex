@@ -30,7 +30,7 @@ defmodule GoogleNews.Fetch do
     uri = URI.parse(text)
 
     unless uri.authority in [nil, "news.google.com"] do
-      raise(ArgumentError, message: "Invalid uri")
+      raise(ArgumentError, message: "invalid uri")
     end
 
     %URI{
