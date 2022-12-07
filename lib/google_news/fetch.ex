@@ -54,11 +54,10 @@ defmodule GoogleNews.Fetch do
     sep = if sep_ok, do: "", else: "/"
     pfx = if pfx_ok, do: "", else: "/rss#{sep}"
 
-    Map.merge(uri, %{
-      host: "news.google.com",
-      authority: "news.google.com",
-      path: "#{pfx}#{uri.path}"
-    })
+    uri
+    |> Map.put(:path, "#{pfx}#{uri.path}")
+    |> Map.put(:authority, "news.google.com")
+    |> Map.put(:host, "news.google.com")
   end
 
   # Compile correct country-lang parameters for Google News RSS URL.

@@ -50,15 +50,15 @@ defmodule GoogleNews.Parse do
     feed =
       map
       |> Map.delete(:entries)
-      |> Map.merge(%{__struct__: FeedInfo})
+      |> Map.put(:__struct__, FeedInfo)
 
     entries =
       map
       |> Map.get(:entries)
       |> Enum.map(fn item ->
         item
-        |> Map.merge(%{__struct__: Entry})
         |> sub_articles_merge()
+        |> Map.put(:__struct__, Entry)
       end)
 
     %Feed{feed: feed, entries: entries}
