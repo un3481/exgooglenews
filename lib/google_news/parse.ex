@@ -16,7 +16,22 @@ defmodule GoogleNews.Parse do
   alias GoogleNews.{Feed, FeedInfo, Entry, SubArticle}
   alias GoogleNews.ParseError
 
-  # Return subarticles from the main and topic feeds.
+  # Handle FeederEx response
+  defp handle_feed({:ok, value, _}) when is_map(value), do: value
+
+  defp handle_feed({:fatal_error, _, reason, _, _}) do
+    raise(ParseError, reason: :parser_error, value: reason)
+  end
+
+  defp handle_feed({:error, error}) do
+    raise(ParseError, reason: :parser_error, value: error)
+  end
+
+  defp handle_feed(value) do
+    raise(ParseError, reason: :invalid_output, value: value)
+  end
+
+  # Parse subarticles from feed.
   defp sub_articles_parse(text) do
     text
     |> Floki.parse_document!()
@@ -35,20 +50,17 @@ defmodule GoogleNews.Parse do
     _ -> []
   end
 
-  # Merge subarticles to entry
-  defp sub_articles_merge(entry) do
+  # Get subarticles from entry
+  defp sub_articles(entry) do
     summary = Map.get(entry, :summary)
 
-    sub_articles =
-      if is_binary(summary),
-        do: sub_articles_parse(summary),
-        else: []
-
-    Map.put(entry, :sub_articles, sub_articles)
+    if is_binary(summary),
+      do: sub_articles_parse(summary),
+      else: []
   end
 
   # Separate FeederEx Feed from Entries
-  defp handle_feed({:ok, value, _}) when is_map(value) do
+  defp format(value) do
     feed =
       value
       |> Map.delete(:entries)
@@ -59,23 +71,11 @@ defmodule GoogleNews.Parse do
       |> Map.get(:entries)
       |> Enum.map(fn item ->
         item
-        |> sub_articles_merge()
+        |> Map.put(:sub_articles, sub_articles(item))
         |> Map.put(:__struct__, Entry)
       end)
 
     %Feed{feed: feed, entries: entries}
-  end
-
-  defp handle_feed({:fatal_error, _, reason, _, _}) do
-    raise(ParseError, reason: :parser_error, value: reason)
-  end
-
-  defp handle_feed({:error, error}) do
-    raise(ParseError, reason: :parser_error, value: error)
-  end
-
-  defp handle_feed(value) do
-    raise(ParseError, reason: :invalid_output, value: value)
   end
 
   @doc """
@@ -86,5 +86,6 @@ defmodule GoogleNews.Parse do
     rss
     |> FeederEx.parse()
     |> handle_feed()
+    |> format()
   end
 end
