@@ -47,8 +47,6 @@ defmodule GoogleNews.Parse do
         publisher: Floki.text(font)
       }
     end)
-  rescue
-    _ -> []
   end
 
   # Separate FeederEx Feed from Entries
