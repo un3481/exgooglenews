@@ -1,6 +1,5 @@
 defmodule GoogleNews.ParseTest do
-  use ExUnit.Case
-  doctest GoogleNews
+  use ExUnit.Case, async: true
 
   test "error on parse, reason: :parser_error (invalid rss 1)" do
     error = %GoogleNews.ParseError{

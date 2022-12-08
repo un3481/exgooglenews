@@ -1,6 +1,5 @@
 defmodule GoogleNews.ProxyTest do
-  use ExUnit.Case
-  doctest GoogleNews
+  use ExUnit.Case, async: true
 
   @url_scraping_bee "https://app.scrapingbee.com/api/v1/"
   @example_scraping_bee_token "123456789abc"

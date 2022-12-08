@@ -1,6 +1,5 @@
 defmodule GoogleNews.FetchTest do
-  use ExUnit.Case
-  doctest GoogleNews
+  use ExUnit.Case, async: true
 
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
