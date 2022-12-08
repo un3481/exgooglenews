@@ -1,4 +1,4 @@
-defmodule GoogleNews.MainFunctionsTest do
+defmodule GoogleNews.MainTest do
   use ExUnit.Case, async: true
 
   @base_url "https://news.google.com/rss"
