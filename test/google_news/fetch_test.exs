@@ -44,7 +44,7 @@ defmodule GoogleNews.FetchTest do
     assert error == result
   end
 
-  test "error on fetch, reason: :http_status (building url 1)" do
+  test "error on fetch, reason: :response_status (building url 1)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "http://news.google.com/rss/example?#{@ceid_en_us}"
       assert opts == []
@@ -53,7 +53,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
@@ -67,7 +67,7 @@ defmodule GoogleNews.FetchTest do
     assert error == result
   end
 
-  test "error on fetch, reason: :http_status (building url 2)" do
+  test "error on fetch, reason: :response_status (building url 2)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "#{@base_url}/example/foo?#{@ceid_en_us}"
       assert opts == []
@@ -76,7 +76,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
@@ -90,7 +90,7 @@ defmodule GoogleNews.FetchTest do
     assert error == result
   end
 
-  test "error on fetch, reason: :http_status (building url 3)" do
+  test "error on fetch, reason: :response_status (building url 3)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "#{@base_url}/example/bar?#{@ceid_en_us}"
       assert opts == []
@@ -99,7 +99,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
@@ -113,7 +113,7 @@ defmodule GoogleNews.FetchTest do
     assert error == result
   end
 
-  test "error on fetch, reason: :http_status (building url 4)" do
+  test "error on fetch, reason: :response_status (building url 4)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "#{@base_url}/example?foo=42&bar=test&ex=foo%3Abar&#{@ceid_en_us}"
       assert opts == []
@@ -122,7 +122,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 

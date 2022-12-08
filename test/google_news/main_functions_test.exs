@@ -10,7 +10,7 @@ defmodule GoogleNews.MainFunctionsTest do
   @url_geo_headlines "#{@base_url}/headlines/section/geo/Los%20Angeles?#{@ceid_en_us}"
   @url_search "#{@base_url}/search?q=boeing+after%3A2022-02-24&#{@ceid_en_us}"
 
-  test "error on top_news, reason: :http_status" do
+  test "error on top_news, reason: :response_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_top_news
       assert opts == []
@@ -19,7 +19,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
@@ -53,7 +53,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
   end
 
-  test "error on topic_headlines, reason: :http_status" do
+  test "error on topic_headlines, reason: :response_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_topic_headlines
       assert opts == []
@@ -62,7 +62,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
@@ -96,7 +96,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
   end
 
-  test "error on geo_headlines, reason: :http_status" do
+  test "error on geo_headlines, reason: :response_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_geo_headlines
       assert opts == []
@@ -105,7 +105,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
@@ -156,7 +156,7 @@ defmodule GoogleNews.MainFunctionsTest do
     assert {:error, error} == GoogleNews.search("boeing", from: "2022-02")
   end
 
-  test "error on search, reason: :http_status" do
+  test "error on search, reason: :response_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_search
       assert opts == []
@@ -165,7 +165,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404}
     }
 

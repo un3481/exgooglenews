@@ -6,7 +6,7 @@ defmodule GoogleNews.FetchError do
   def message(%{reason: reason, value: value}) do
     case reason do
       :invalid_uri -> "invalid uri: #{inspect(value)}"
-      :http_status -> "invalid response status code: #{inspect(value.status)}"
+      :response_status -> "invalid response status code: #{inspect(value.status)}"
       :request_error -> "error on http client: #{inspect(value)}"
       :invalid_output -> "invalid output from http client: #{inspect(value)}"
       _ -> "could not fetch the resource: #{inspect(value)}"
@@ -126,7 +126,7 @@ defmodule GoogleNews.Fetch do
   defp handle_response({:ok, %{status: 200, body: body}}), do: body
 
   defp handle_response({:ok, response}) do
-    raise(FetchError, reason: :http_status, value: response)
+    raise(FetchError, reason: :response_status, value: response)
   end
 
   defp handle_response({:error, error}) do

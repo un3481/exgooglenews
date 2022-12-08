@@ -24,7 +24,7 @@ defmodule GoogleNews.ProxyTest do
     assert {:error, error} == GoogleNews.top_news(options)
   end
 
-  test "error on top_news, reason: :http_status (using :proxy)" do
+  test "error on top_news, reason: :response_status (using :proxy)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_top_news
       assert opts == [connect_options: [proxy: @example_proxy]]
@@ -33,14 +33,14 @@ defmodule GoogleNews.ProxyTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404, body: :proxy}
     }
 
     assert {:error, error} == GoogleNews.top_news(proxy: @example_proxy)
   end
 
-  test "error on top_news, reason: :http_status (using :scraping_bee)" do
+  test "error on top_news, reason: :response_status (using :scraping_bee)" do
     Mox.expect(ReqMock, :post, fn url, opts ->
       assert url == @url_scraping_bee
 
@@ -56,7 +56,7 @@ defmodule GoogleNews.ProxyTest do
     end)
 
     error = %GoogleNews.FetchError{
-      reason: :http_status,
+      reason: :response_status,
       value: %Req.Response{status: 404, body: :scraping_bee}
     }
 
