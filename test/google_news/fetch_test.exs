@@ -1,6 +1,8 @@
 defmodule GoogleNews.FetchTest do
   use ExUnit.Case, async: true
 
+  alias GoogleNews.{FetchError, ParseError}
+
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
 
@@ -14,7 +16,7 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("https://example.com/rss")
       rescue
-        err -> err
+        err in [FetchError, ArgumentError] -> err
       end
 
     assert error == result
@@ -37,7 +39,7 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("")
       rescue
-        err -> err
+        err in [FetchError, ArgumentError] -> err
       end
 
     assert error == result
@@ -60,7 +62,7 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("http://news.google.com/rss/example")
       rescue
-        err -> err
+        err in [FetchError, ArgumentError] -> err
       end
 
     assert error == result
@@ -83,7 +85,7 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("example/foo")
       rescue
-        err -> err
+        err in [FetchError, ArgumentError] -> err
       end
 
     assert error == result
@@ -106,7 +108,7 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("rss/example/bar")
       rescue
-        err -> err
+        err in [FetchError, ArgumentError] -> err
       end
 
     assert error == result
@@ -129,7 +131,7 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")
       rescue
-        err -> err
+        err in [FetchError, ArgumentError] -> err
       end
 
     assert error == result
@@ -149,23 +151,16 @@ defmodule GoogleNews.FetchTest do
 
     result =
       try do
-        GoogleNews.Fetch.fetch!("foo/bar")
+        "foo/bar"
+        |> GoogleNews.Fetch.fetch!()
+        |> GoogleNews.Parse.parse!()
       rescue
-        _ -> :error
+        err in [FetchError, ParseError, ArgumentError] -> err
       end
 
-    assert result != :error
+    assert result.__struct__ == GoogleNews.Feed
 
-    feed =
-      try do
-        GoogleNews.Parse.parse!(result)
-      rescue
-        _ -> :error
-      end
-
-    assert feed != :error
-
-    %GoogleNews.Feed{feed: feed, entries: entries} = feed
+    %GoogleNews.Feed{feed: feed, entries: entries} = result
 
     assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "Google News"

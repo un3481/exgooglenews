@@ -1,6 +1,8 @@
 defmodule GoogleNews.ParseTest do
   use ExUnit.Case, async: true
 
+  alias GoogleNews.ParseError
+
   test "error on parse, reason: :parser_error (invalid rss 1)" do
     error = %GoogleNews.ParseError{
       reason: :parser_error,
@@ -11,7 +13,7 @@ defmodule GoogleNews.ParseTest do
       try do
         GoogleNews.Parse.parse!("")
       rescue
-        err -> err
+        err in [ParseError, ArgumentError] -> err
       end
 
     assert error == result
@@ -27,7 +29,7 @@ defmodule GoogleNews.ParseTest do
       try do
         GoogleNews.Parse.parse!("<rss bff65")
       rescue
-        err -> err
+        err in [ParseError, ArgumentError] -> err
       end
 
     assert error == result
@@ -43,7 +45,7 @@ defmodule GoogleNews.ParseTest do
       try do
         GoogleNews.Parse.parse!("<rss version=\\\"2.0\\\"></rss>")
       rescue
-        err -> err
+        err in [ParseError, ArgumentError] -> err
       end
 
     assert error == result
@@ -59,7 +61,7 @@ defmodule GoogleNews.ParseTest do
       try do
         GoogleNews.Parse.parse!("<rss><channel></rss>")
       rescue
-        err -> err
+        err in [ParseError, ArgumentError] -> err
       end
 
     assert error == result
@@ -72,7 +74,7 @@ defmodule GoogleNews.ParseTest do
       try do
         GoogleNews.Parse.parse!("<rss version=\"2.0\"></rss>")
       rescue
-        err -> err
+        err in [ParseError, ArgumentError] -> err
       end
 
     assert feed == result
