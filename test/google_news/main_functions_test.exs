@@ -10,7 +10,7 @@ defmodule GoogleNews.MainFunctionsTest do
   @url_geo_headlines "#{@base_url}/headlines/section/geo/Los%20Angeles?#{@ceid_en_us}"
   @url_search "#{@base_url}/search?q=boeing+after%3A2022-02-24&#{@ceid_en_us}"
 
-  test "error on 404 for top_news" do
+  test "error on top_news, reason: :http_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_top_news
       assert opts == []
@@ -19,13 +19,14 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
     assert {:error, error} == GoogleNews.top_news()
   end
 
-  test "ok on 200 for top_news" do
+  test "ok on top_news" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_top_news
       assert opts == []
@@ -52,7 +53,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
   end
 
-  test "error on 404 for topic_headlines" do
+  test "error on topic_headlines, reason: :http_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_topic_headlines
       assert opts == []
@@ -61,13 +62,14 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
     assert {:error, error} == GoogleNews.topic_headlines("Sports")
   end
 
-  test "ok on 200 for topic_headlines" do
+  test "ok on topic_headlines" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_topic_headlines
       assert opts == []
@@ -94,7 +96,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
   end
 
-  test "error on 404 for geo_headlines" do
+  test "error on geo_headlines, reason: :http_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_geo_headlines
       assert opts == []
@@ -103,13 +105,14 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
     assert {:error, error} == GoogleNews.geo_headlines("Los Angeles")
   end
 
-  test "ok on 200 for geo_headlines" do
+  test "ok on geo_headlines" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_geo_headlines
       assert opts == []
@@ -137,7 +140,7 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
   end
 
-  test "error on argument to search" do
+  test "error on search, reason: :argument_error (invalid argument type)" do
     error = %ArgumentError{
       message: "cannot parse ~D[2022-02-24] as date, reason: :invalid_format"
     }
@@ -145,7 +148,15 @@ defmodule GoogleNews.MainFunctionsTest do
     assert {:error, error} == GoogleNews.search("boeing", from: ~D[2022-02-24])
   end
 
-  test "error on 404 for search" do
+  test "error on search, reason: :argument_error (invalid date format)" do
+    error = %ArgumentError{
+      message: "cannot parse \"2022-02\" as date, reason: :invalid_format"
+    }
+
+    assert {:error, error} == GoogleNews.search("boeing", from: "2022-02")
+  end
+
+  test "error on search, reason: :http_status" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_search
       assert opts == []
@@ -154,13 +165,14 @@ defmodule GoogleNews.MainFunctionsTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
     assert {:error, error} == GoogleNews.search("boeing", from: "2022-02-24")
   end
 
-  test "ok on 200 for search" do
+  test "ok on search" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_search
       assert opts == []

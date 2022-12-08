@@ -1,20 +1,20 @@
 defmodule GoogleNews.ParseError do
-  @type t :: %__MODULE__{message: String.t(), value: any}
+  @type t :: %__MODULE__{reason: atom, value: any}
 
-  defexception message: nil, value: nil
+  defexception reason: nil, value: nil
 
-  def message(%{message: nil, value: value}) do
-    "could not parse the feed: #{inspect(value)}"
-  end
-
-  def message(%{message: message}) do
-    message
+  def message(%{reason: reason, value: value}) do
+    case reason do
+      :parser_error -> "error on rss parser: #{inspect(value)}"
+      :invalid_output -> "invalid output from rss parser: #{inspect(value)}"
+      _ -> "could not parse the feed: #{inspect(value)}"
+    end
   end
 end
 
 defmodule GoogleNews.Parse do
   alias GoogleNews.{Feed, FeedInfo, Entry, SubArticle}
-  alias GoogleNews.{Error, ParseError}
+  alias GoogleNews.ParseError
 
   # Return subarticles from the main and topic feeds.
   defp sub_articles_parse(text) do
@@ -31,6 +31,8 @@ defmodule GoogleNews.Parse do
         publisher: Floki.text(font)
       }
     end)
+  rescue
+    _ -> []
   end
 
   # Merge subarticles to entry
@@ -46,14 +48,14 @@ defmodule GoogleNews.Parse do
   end
 
   # Separate FeederEx Feed from Entries
-  defp handle_feed({:ok, map, _}) when is_map(map) do
+  defp handle_feed({:ok, value, _}) when is_map(value) do
     feed =
-      map
+      value
       |> Map.delete(:entries)
       |> Map.put(:__struct__, FeedInfo)
 
     entries =
-      map
+      value
       |> Map.get(:entries)
       |> Enum.map(fn item ->
         item
@@ -64,9 +66,17 @@ defmodule GoogleNews.Parse do
     %Feed{feed: feed, entries: entries}
   end
 
-  defp handle_feed({:fatal_error, _, reason, _, _}), do: raise(ParseError, value: reason)
-  defp handle_feed({:error, error}), do: raise(ParseError, value: error)
-  defp handle_feed(unknown), do: raise(Error, message: "invalid return", value: unknown)
+  defp handle_feed({:fatal_error, _, reason, _, _}) do
+    raise(ParseError, reason: :parser_error, value: reason)
+  end
+
+  defp handle_feed({:error, error}) do
+    raise(ParseError, reason: :parser_error, value: error)
+  end
+
+  defp handle_feed(value) do
+    raise(ParseError, reason: :invalid_output, value: value)
+  end
 
   @doc """
   Parse RSS Feed

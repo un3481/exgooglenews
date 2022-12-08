@@ -1,17 +1,3 @@
-defmodule GoogleNews.Error do
-  @type t :: %__MODULE__{message: String.t(), value: any}
-
-  defexception message: nil, value: nil
-
-  def message(%{message: nil, value: value}) do
-    "google_news found an error: #{inspect(value)}"
-  end
-
-  def message(%{message: message}) do
-    message
-  end
-end
-
 defmodule GoogleNews.SubArticle do
   @type t :: %__MODULE__{
           title: binary,
@@ -86,7 +72,7 @@ defmodule GoogleNews.Feed do
   alias GoogleNews.{FeedInfo, Entry}
 
   @typedoc """
-  Struct that contains Parsed RSS Feed information.
+  Struct that contains parsed RSS Feed information.
   """
   @type t :: %__MODULE__{
           feed: FeedInfo.t(),

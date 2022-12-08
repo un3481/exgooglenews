@@ -1,19 +1,21 @@
 defmodule GoogleNews.FetchError do
-  @type t :: %__MODULE__{message: String.t(), value: any}
+  @type t :: %__MODULE__{reason: atom, value: any}
 
-  defexception message: nil, value: nil
+  defexception reason: nil, value: nil
 
-  def message(%{message: nil, value: value}) do
-    "could not fetch the resource: #{inspect(value)}"
-  end
-
-  def message(%{message: message}) do
-    message
+  def message(%{reason: reason, value: value}) do
+    case reason do
+      :invalid_uri -> "invalid uri: #{inspect(value)}"
+      :http_status -> "invalid response status code: #{inspect(value.status)}"
+      :request_error -> "error on http client: #{inspect(value)}"
+      :invalid_output -> "invalid output from http client: #{inspect(value)}"
+      _ -> "could not fetch the resource: #{inspect(value)}"
+    end
   end
 end
 
 defmodule GoogleNews.Fetch do
-  alias GoogleNews.{Error, FetchError}
+  alias GoogleNews.FetchError
 
   @typedoc """
   Proxy configuration for Mint package.
@@ -30,7 +32,7 @@ defmodule GoogleNews.Fetch do
     uri = URI.parse(text)
 
     unless uri.authority in [nil, "news.google.com"] do
-      raise(ArgumentError, message: "invalid uri")
+      raise(FetchError, reason: :invalid_uri, value: text)
     end
 
     %URI{
@@ -96,7 +98,7 @@ defmodule GoogleNews.Fetch do
   end
 
   defp request(_, proxy, scraping_bee) when not is_nil(proxy) and not is_nil(scraping_bee) do
-    raise(ArgumentError, message: "pick either a proxy or scraping_bee, not both")
+    raise(ArgumentError, message: "use either :proxy or :scraping_bee, not both")
   end
 
   defp request(uri, proxy, nil) when not is_nil(proxy) do
@@ -122,9 +124,18 @@ defmodule GoogleNews.Fetch do
 
   # Handle response for RSS Feed.
   defp handle_response({:ok, %{status: 200, body: body}}), do: body
-  defp handle_response({:ok, response}), do: raise(FetchError, value: response)
-  defp handle_response({:error, error}), do: raise(FetchError, value: error)
-  defp handle_response(unknown), do: raise(Error, message: "invalid return", value: unknown)
+
+  defp handle_response({:ok, response}) do
+    raise(FetchError, reason: :http_status, value: response)
+  end
+
+  defp handle_response({:error, error}) do
+    raise(FetchError, reason: :request_error, value: error)
+  end
+
+  defp handle_response(value) do
+    raise(FetchError, reason: :invalid_output, value: value)
+  end
 
   @doc """
   Retrieve RSS Feed using provided methods.

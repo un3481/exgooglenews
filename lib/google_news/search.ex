@@ -1,14 +1,14 @@
 defmodule GoogleNews.Search do
   # Validate date format
-  defp check_date(validate) when is_binary(validate) do
-    validate
+  defp date(value) when is_binary(value) do
+    value
     |> Date.from_iso8601!()
     |> Date.to_iso8601()
   end
 
-  defp check_date(validate) do
+  defp date(value) do
     raise(ArgumentError,
-      message: "cannot parse #{inspect(validate)} as date, reason: :invalid_format"
+      message: "cannot parse #{inspect(value)} as date, reason: :invalid_format"
     )
   end
 
@@ -17,10 +17,10 @@ defmodule GoogleNews.Search do
     do: reduce("#{text} when:#{w}", nil, nil, nil)
 
   defp reduce(text, _, from, to) when not is_nil(from),
-    do: reduce("#{text} after:#{check_date(from)}", nil, nil, to)
+    do: reduce("#{text} after:#{date(from)}", nil, nil, to)
 
   defp reduce(text, _, _, to) when not is_nil(to),
-    do: reduce("#{text} before:#{check_date(to)}", nil, nil, nil)
+    do: reduce("#{text} before:#{date(to)}", nil, nil, nil)
 
   defp reduce(text, _, _, _), do: text
 

@@ -2,28 +2,29 @@ defmodule GoogleNews.ProxyTest do
   use ExUnit.Case
   doctest GoogleNews
 
+  @url_scraping_bee "https://app.scrapingbee.com/api/v1/"
+  @example_scraping_bee_token "123456789abc"
+  @example_proxy {:http, "localhost", 8899, []}
+
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
 
   @url_top_news "#{@base_url}?#{@ceid_en_us}"
 
-  @example_proxy {:http, "localhost", 8899, []}
-  @example_scraping_bee_token "123456789abc"
-  @scraping_bee_url "https://app.scrapingbee.com/api/v1/"
+  test "error on top_news, reason: :argument_error" do
+    options = [
+      proxy: @example_proxy,
+      scraping_bee: @example_scraping_bee_token
+    ]
 
-  test "error on using both proxy & scraping_bee" do
     error = %ArgumentError{
-      message: "pick either a proxy or scraping_bee, not both"
+      message: "use either :proxy or :scraping_bee, not both"
     }
 
-    assert {:error, error} ==
-             GoogleNews.top_news(
-               proxy: @example_proxy,
-               scraping_bee: @example_scraping_bee_token
-             )
+    assert {:error, error} == GoogleNews.top_news(options)
   end
 
-  test "error on 404 for top_news using proxy" do
+  test "error on top_news, reason: :http_status (using :proxy)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == @url_top_news
       assert opts == [connect_options: [proxy: @example_proxy]]
@@ -32,15 +33,16 @@ defmodule GoogleNews.ProxyTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404, body: :proxy}
     }
 
     assert {:error, error} == GoogleNews.top_news(proxy: @example_proxy)
   end
 
-  test "error on 404 for top_news using scraping bee" do
+  test "error on top_news, reason: :http_status (using :scraping_bee)" do
     Mox.expect(ReqMock, :post, fn url, opts ->
-      assert url == @scraping_bee_url
+      assert url == @url_scraping_bee
 
       assert opts == [
                json: %{
@@ -54,6 +56,7 @@ defmodule GoogleNews.ProxyTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404, body: :scraping_bee}
     }
 

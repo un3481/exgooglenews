@@ -2,72 +2,80 @@ defmodule GoogleNews.ParseTest do
   use ExUnit.Case
   doctest GoogleNews
 
-  @base_url "https://news.google.com/rss"
-  @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
-
-  @url_top_news "#{@base_url}?#{@ceid_en_us}"
-
-  test "error on invalid RSS for top_news (1)" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == []
-
-      {:ok, %Req.Response{status: 200, body: ""}}
-    end)
-
+  test "error on parse, reason: :parser_error (invalid rss 1)" do
     error = %GoogleNews.ParseError{
+      reason: :parser_error,
       value: 'Can\'t detect character encoding due to lack of indata'
     }
 
-    assert {:error, error} == GoogleNews.top_news()
+    result =
+      try do
+        GoogleNews.Parse.parse!("")
+      rescue
+        err -> err
+      end
+
+    assert error == result
   end
 
-  test "error on invalid RSS for top_news (2)" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == []
-
-      {:ok, %Req.Response{status: 200, body: "<rss bff65"}}
-    end)
-
+  test "error on parse, reason: :parser_error (invalid rss 2)" do
     error = %GoogleNews.ParseError{
+      reason: :parser_error,
       value: 'Continuation function undefined'
     }
 
-    assert {:error, error} == GoogleNews.top_news()
+    result =
+      try do
+        GoogleNews.Parse.parse!("<rss bff65")
+      rescue
+        err -> err
+      end
+
+    assert error == result
   end
 
-  test "error on invalid RSS for top_news (3)" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == []
-
-      {:ok,
-       %Req.Response{
-         status: 200,
-         body: "<rss version=\\\"2.0\\\"></rss>"
-       }}
-    end)
-
+  test "error on parse, reason: :parser_error (invalid rss 3)" do
     error = %GoogleNews.ParseError{
+      reason: :parser_error,
       value: '\', " or whitespace expected'
     }
 
-    assert {:error, error} == GoogleNews.top_news()
+    result =
+      try do
+        GoogleNews.Parse.parse!("<rss version=\\\"2.0\\\"></rss>")
+      rescue
+        err -> err
+      end
+
+    assert error == result
   end
 
-  test "ok on 200 for top_news with empty RSS" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == []
+  test "error on parse, reason: :parser_error (invalid rss 4)" do
+    error = %GoogleNews.ParseError{
+      reason: :parser_error,
+      value: 'EndTag: :rss, does not match StartTag'
+    }
 
-      {:ok,
-       %Req.Response{
-         status: 200,
-         body: "<rss version=\"2.0\"></rss>"
-       }}
-    end)
+    result =
+      try do
+        GoogleNews.Parse.parse!("<rss><channel></rss>")
+      rescue
+        err -> err
+      end
 
-    assert {:ok, %GoogleNews.Feed{}} == GoogleNews.top_news()
+    assert error == result
+  end
+
+  test "ok on parse (parsing empty rss)" do
+    feed = %GoogleNews.Feed{}
+
+    result =
+      try do
+        GoogleNews.Parse.parse!("<rss version=\"2.0\"></rss>")
+      rescue
+        err -> err
+      end
+
+    assert feed == result
   end
 end

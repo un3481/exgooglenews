@@ -5,7 +5,7 @@ defmodule GoogleNews do
 
   alias GoogleNews.Feed
   alias GoogleNews.{Fetch, Parse, Search}
-  alias GoogleNews.{Error, FetchError, ParseError}
+  alias GoogleNews.{FetchError, ParseError}
 
   @headlines [
     "WORLD",
@@ -35,7 +35,7 @@ defmodule GoogleNews do
   def top_news(opts \\ []) do
     {:ok, top_news!(opts)}
   rescue
-    error in [Error, FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError] ->
       {:error, error}
   end
 
@@ -63,7 +63,7 @@ defmodule GoogleNews do
   def topic_headlines(geo, opts \\ []) do
     {:ok, topic_headlines!(geo, opts)}
   rescue
-    error in [Error, FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError] ->
       {:error, error}
   end
 
@@ -84,7 +84,7 @@ defmodule GoogleNews do
   def geo_headlines(geo, opts \\ []) do
     {:ok, geo_headlines!(geo, opts)}
   rescue
-    error in [Error, FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError] ->
       {:error, error}
   end
 
@@ -113,7 +113,7 @@ defmodule GoogleNews do
   def search(query, opts \\ []) do
     {:ok, search!(query, opts)}
   rescue
-    error in [Error, FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError] ->
       {:error, error}
   end
 end

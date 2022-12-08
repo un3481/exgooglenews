@@ -5,35 +5,46 @@ defmodule GoogleNews.FetchTest do
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
 
-  @url_top_news "#{@base_url}?#{@ceid_en_us}"
-
-  test "error on Req" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == []
-
-      {:error, :req_error}
-    end)
-
-    error = %GoogleNews.FetchError{value: :req_error}
-
-    assert {:error, error} == GoogleNews.top_news()
-  end
-
-  test "error on fetch invalid url" do
-    error = %ArgumentError{message: "invalid uri"}
+  test "error on fetch, reason: :invalid_uri" do
+    error = %GoogleNews.FetchError{
+      reason: :invalid_uri,
+      value: "https://example.com/rss"
+    }
 
     result =
       try do
-        {:ok, GoogleNews.Fetch.fetch!("https://example.com/rss")}
+        GoogleNews.Fetch.fetch!("https://example.com/rss")
       rescue
-        e -> {:error, e}
+        err -> err
       end
 
-    assert {:error, error} == result
+    assert error == result
   end
 
-  test "error on 404 for fetch (1)" do
+  test "error on fetch, reason: :request_error" do
+    Mox.expect(ReqMock, :get, fn url, opts ->
+      assert url == "#{@base_url}?#{@ceid_en_us}"
+      assert opts == []
+
+      {:error, :foo_bar}
+    end)
+
+    error = %GoogleNews.FetchError{
+      reason: :request_error,
+      value: :foo_bar
+    }
+
+    result =
+      try do
+        GoogleNews.Fetch.fetch!("")
+      rescue
+        err -> err
+      end
+
+    assert error == result
+  end
+
+  test "error on fetch, reason: :http_status (building url 1)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "http://news.google.com/rss/example?#{@ceid_en_us}"
       assert opts == []
@@ -42,6 +53,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
@@ -49,13 +61,13 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("http://news.google.com/rss/example")
       rescue
-        e -> {:error, e}
+        err -> err
       end
 
-    assert {:error, error} == result
+    assert error == result
   end
 
-  test "error on 404 for fetch (2)" do
+  test "error on fetch, reason: :http_status (building url 2)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "#{@base_url}/example/foo?#{@ceid_en_us}"
       assert opts == []
@@ -64,6 +76,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
@@ -71,13 +84,13 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("example/foo")
       rescue
-        e -> {:error, e}
+        err -> err
       end
 
-    assert {:error, error} == result
+    assert error == result
   end
 
-  test "error on 404 for fetch (3)" do
+  test "error on fetch, reason: :http_status (building url 3)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "#{@base_url}/example/bar?#{@ceid_en_us}"
       assert opts == []
@@ -86,6 +99,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
@@ -93,13 +107,13 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("rss/example/bar")
       rescue
-        e -> {:error, e}
+        err -> err
       end
 
-    assert {:error, error} == result
+    assert error == result
   end
 
-  test "error on 404 for fetch (4)" do
+  test "error on fetch, reason: :http_status (building url 4)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "#{@base_url}/example?foo=42&bar=test&ex=foo%3Abar&#{@ceid_en_us}"
       assert opts == []
@@ -108,6 +122,7 @@ defmodule GoogleNews.FetchTest do
     end)
 
     error = %GoogleNews.FetchError{
+      reason: :http_status,
       value: %Req.Response{status: 404}
     }
 
@@ -115,13 +130,13 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")
       rescue
-        e -> {:error, e}
+        err -> err
       end
 
-    assert {:error, error} == result
+    assert error == result
   end
 
-  test "ok on 200 for fetch non-existent feed" do
+  test "ok on fetch (fetching non-existent feed)" do
     Mox.expect(ReqMock, :get, fn url, opts ->
       assert url == "#{@base_url}/foo/bar?#{@ceid_en_us}"
       assert opts == []
@@ -137,12 +152,21 @@ defmodule GoogleNews.FetchTest do
       try do
         GoogleNews.Fetch.fetch!("foo/bar")
       rescue
-        _ -> nil
+        _ -> :error
       end
 
-    assert result != nil
+    assert result != :error
 
-    %GoogleNews.Feed{feed: feed, entries: entries} = GoogleNews.Parse.parse!(result)
+    feed =
+      try do
+        GoogleNews.Parse.parse!(result)
+      rescue
+        _ -> :error
+      end
+
+    assert feed != :error
+
+    %GoogleNews.Feed{feed: feed, entries: entries} = feed
 
     assert feed.__struct__ == GoogleNews.FeedInfo
     assert feed.title == "Google News"
