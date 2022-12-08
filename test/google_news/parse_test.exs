@@ -16,7 +16,7 @@ defmodule GoogleNews.ParseTest do
     end)
 
     error = %GoogleNews.ParseError{
-      message: 'Can\'t detect character encoding due to lack of indata'
+      value: 'Can\'t detect character encoding due to lack of indata'
     }
 
     assert {:error, error} == GoogleNews.top_news()
@@ -31,7 +31,7 @@ defmodule GoogleNews.ParseTest do
     end)
 
     error = %GoogleNews.ParseError{
-      message: 'Continuation function undefined'
+      value: 'Continuation function undefined'
     }
 
     assert {:error, error} == GoogleNews.top_news()
@@ -50,7 +50,7 @@ defmodule GoogleNews.ParseTest do
     end)
 
     error = %GoogleNews.ParseError{
-      message: '\', " or whitespace expected'
+      value: '\', " or whitespace expected'
     }
 
     assert {:error, error} == GoogleNews.top_news()

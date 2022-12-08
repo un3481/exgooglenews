@@ -64,8 +64,8 @@ defmodule GoogleNews.Parse do
     %Feed{feed: feed, entries: entries}
   end
 
-  defp handle_feed({:fatal_error, _, reason, _, _}), do: raise(ParseError, message: reason)
-  defp handle_feed({:error, reason}), do: raise(ParseError, message: reason)
+  defp handle_feed({:fatal_error, _, reason, _, _}), do: raise(ParseError, value: reason)
+  defp handle_feed({:error, error}), do: raise(ParseError, value: error)
   defp handle_feed(unknown), do: raise(Error, message: "invalid return", value: unknown)
 
   @doc """
