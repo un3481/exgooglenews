@@ -31,9 +31,10 @@ defmodule GoogleNews.Parse do
     raise(ParseError, reason: :invalid_output, value: value)
   end
 
-  # Parse subarticles from feed.
-  defp sub_articles_parse(text) do
-    text
+  # Parse subarticles from entry.
+  defp sub_articles(entry) do
+    entry
+    |> Map.get(:summary)
     |> Floki.parse_document!()
     |> Floki.find("li")
     |> Enum.map(fn li ->
@@ -48,15 +49,6 @@ defmodule GoogleNews.Parse do
     end)
   rescue
     _ -> []
-  end
-
-  # Get subarticles from entry
-  defp sub_articles(entry) do
-    summary = Map.get(entry, :summary)
-
-    if is_binary(summary),
-      do: sub_articles_parse(summary),
-      else: []
   end
 
   # Separate FeederEx Feed from Entries
