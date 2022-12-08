@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   check-elixir-formatting:
     name: Check Elixir formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
 
@@ -20,7 +20,7 @@ jobs:
 
   test-elixir:
     name: Test with OTP ${{ matrix.otp }} and Elixir ${{ matrix.elixir }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     env:
       MIX_ENV: test
