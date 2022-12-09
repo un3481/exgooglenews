@@ -14,12 +14,13 @@ defmodule GoogleNews.FetchError do
 end
 
 defmodule GoogleNews.Fetch do
-  alias GoogleNews.FetchError
+  @moduledoc """
 
-  @typedoc """
-  Proxy configuration for Mint package.
+  RSS fetching module (includes uri encoding, language options, proxying, etc.)
+
   """
-  @type proxy_descriptor :: {atom, String.t(), integer, list}
+
+  alias GoogleNews.FetchError
 
   # Encode URL and check consistency.
   defp encode(text, opts) do
@@ -137,9 +138,38 @@ defmodule GoogleNews.Fetch do
   end
 
   @doc """
-  Retrieve RSS Feed using provided methods.
+  Fetch raw RSS Feed from google news using provided methods.
 
-  @param boolean encode: When True helps with URL quoting.
+  ## Fetch Options
+
+    * `:lang` - adds the given lang parameter to the request query, default is "en".
+
+    * `:country` - adds the given country parameter to the request query, default is "US".
+
+    * `:encode` - if set, encodes the uri using `URI.encode/1`, default is true.
+
+    * `:proxy` - Mint HTTP/1 proxy settings, a `{schema, address, port, options}` tuple.
+                 See `Mint.HTTP.connect/4` for more information.
+
+    * `:scraping_bee` - A token to be passed to the ScrapingBee API if this option is selected.
+
+  ## Examples
+
+  Fetch RSS feed from main page
+
+      iex> GoogleNews.Fetch.fetch!("https://google.news.com/rss")
+      "..."
+
+  Fetch RSS feed from SPORTS topic
+
+      iex> GoogleNews.Fetch.fetch!("rss/headlines/section/topic/SPORTS")
+      "..."
+
+  Fetch RSS feed from a search for 'boeing' in a custom language
+
+      iex> GoogleNews.Fetch.fetch!("/rss/search?q=boeing", lang: "uk", country: "UA")
+      "..."
+
   """
   @spec fetch!(binary, list) :: binary
   def fetch!(uri, opts \\ []) when is_binary(uri) and is_list(opts) do

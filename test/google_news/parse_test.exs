@@ -70,8 +70,6 @@ defmodule GoogleNews.ParseTest do
   end
 
   test "ok on parse (parsing empty rss)" do
-    feed = %Feed{}
-
     result =
       try do
         Parse.parse!("<rss version=\"2.0\"></rss>")
@@ -79,6 +77,6 @@ defmodule GoogleNews.ParseTest do
         err in [ParseError, ArgumentError] -> err
       end
 
-    assert feed == result
+    assert result == %Feed{}
   end
 end

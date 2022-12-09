@@ -13,6 +13,12 @@ defmodule GoogleNews.ParseError do
 end
 
 defmodule GoogleNews.Parse do
+  @moduledoc """
+
+  Module for parsing the RSS feed (using FeederEx and Floki packages)
+
+  """
+
   alias GoogleNews.{Feed, FeedInfo, Entry, SubArticle}
   alias GoogleNews.ParseError
 
@@ -69,7 +75,22 @@ defmodule GoogleNews.Parse do
   end
 
   @doc """
-  Parse RSS Feed
+  Parse RSS feed binary using FeederEx package
+
+  ## Examples
+
+  Parse empty RSS feed XML
+
+      iex> empty = GoogleNews.Parse.parse!("<rss></rss>")
+      iex> empty.__struct__
+      GoogleNews.Feed
+
+  Error on trying to parse empty string
+
+      iex> error = try do GoogleNews.Parse.parse!("") rescue err -> err end
+      iex> error.reason
+      :parser_error
+
   """
   @spec parse!(String.t()) :: Feed.t()
   def parse!(rss) when is_binary(rss) do

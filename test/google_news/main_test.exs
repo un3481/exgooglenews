@@ -1,5 +1,6 @@
 defmodule GoogleNews.MainTest do
   use ExUnit.Case, async: true
+  import Mox
 
   alias GoogleNews.{Feed, FeedInfo, Entry, SubArticle}
   alias GoogleNews.FetchError
@@ -13,10 +14,8 @@ defmodule GoogleNews.MainTest do
   @url_search "#{@base_url}/search?q=boeing+after%3A2022-02-24&#{@ceid_en_us}"
 
   test "error on top_news, reason: :response_status" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_top_news, [] ->
       {:ok, %Req.Response{status: 404}}
     end)
 
@@ -29,10 +28,8 @@ defmodule GoogleNews.MainTest do
   end
 
   test "ok on top_news" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_top_news, [] ->
       {:ok,
        %Req.Response{
          status: 200,
@@ -56,10 +53,8 @@ defmodule GoogleNews.MainTest do
   end
 
   test "error on topic_headlines, reason: :response_status" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_topic_headlines
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_topic_headlines, [] ->
       {:ok, %Req.Response{status: 404}}
     end)
 
@@ -72,10 +67,8 @@ defmodule GoogleNews.MainTest do
   end
 
   test "ok on topic_headlines" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_topic_headlines
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_topic_headlines, [] ->
       {:ok,
        %Req.Response{
          status: 200,
@@ -99,10 +92,8 @@ defmodule GoogleNews.MainTest do
   end
 
   test "error on geo_headlines, reason: :response_status" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_geo_headlines
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_geo_headlines, [] ->
       {:ok, %Req.Response{status: 404}}
     end)
 
@@ -115,10 +106,8 @@ defmodule GoogleNews.MainTest do
   end
 
   test "ok on geo_headlines" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_geo_headlines
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_geo_headlines, [] ->
       {:ok,
        %Req.Response{
          status: 200,
@@ -158,10 +147,8 @@ defmodule GoogleNews.MainTest do
   end
 
   test "error on search, reason: :response_status" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_search
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_search, [] ->
       {:ok, %Req.Response{status: 404}}
     end)
 
@@ -174,10 +161,8 @@ defmodule GoogleNews.MainTest do
   end
 
   test "ok on search" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_search
-      assert opts == []
-
+    ReqMock
+    |> expect(:get, fn @url_search, [] ->
       {:ok,
        %Req.Response{
          status: 200,

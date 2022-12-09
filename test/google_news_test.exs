@@ -1,4 +1,4 @@
 defmodule GoogleNewsTest do
   use ExUnit.Case
-  doctest GoogleNews
+  # doctest GoogleNews
 end

@@ -1,5 +1,6 @@
 defmodule GoogleNews.ProxyTest do
   use ExUnit.Case, async: true
+  import Mox
 
   alias GoogleNews.FetchError
 
@@ -26,10 +27,8 @@ defmodule GoogleNews.ProxyTest do
   end
 
   test "error on top_news, reason: :response_status (using :proxy)" do
-    Mox.expect(ReqMock, :get, fn url, opts ->
-      assert url == @url_top_news
-      assert opts == [connect_options: [proxy: @example_proxy]]
-
+    ReqMock
+    |> expect(:get, fn @url_top_news, [connect_options: [proxy: @example_proxy]] ->
       {:ok, %Req.Response{status: 404, body: :proxy}}
     end)
 
@@ -42,19 +41,20 @@ defmodule GoogleNews.ProxyTest do
   end
 
   test "error on top_news, reason: :response_status (using :scraping_bee)" do
-    Mox.expect(ReqMock, :post, fn url, opts ->
-      assert url == @url_scraping_bee
-
-      assert opts == [
-               json: %{
-                 api_key: @example_scraping_bee_token,
-                 render_js: "false",
-                 url: @url_top_news
-               }
-             ]
-
-      {:ok, %Req.Response{status: 404, body: :scraping_bee}}
-    end)
+    ReqMock
+    |> expect(
+      :post,
+      fn @url_scraping_bee,
+         [
+           json: %{
+             api_key: @example_scraping_bee_token,
+             render_js: "false",
+             url: @url_top_news
+           }
+         ] ->
+        {:ok, %Req.Response{status: 404, body: :scraping_bee}}
+      end
+    )
 
     error = %FetchError{
       reason: :response_status,

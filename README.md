@@ -257,15 +257,15 @@ For example:
 
 You can turn it off and write your own query in case you need it by `helper: false`
 
-`when` parameter sets the time range for the published datetime. This option appears to work as following:
+`:when` option sets the time range for the published datetime. This option appears to work as following:
 
 - `h` for hours. `when: "12h"` will search for only the articles matching the `search` criteria and published for the last 12 hours
 - `d` for days.
 - `m` for month.
 
-You may try put here anything. Probably, it will work. However, wrong inputs will not lead to an error. Instead, the `when` parameter will be ignored by Google.
+You may try put here anything. Probably, it will work. However, wrong inputs will not lead to an error. Instead, the `:when` option will be ignored by Google.
 
-`from` and `to` accept the following format of date: `%Y-%m-%d` For example, `2020-07-01` 
+`:from` and `:to` accept the following format of date: `%Y-%m-%d` For example, `2020-07-01` 
 
 ---
 
