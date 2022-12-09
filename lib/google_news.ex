@@ -31,7 +31,7 @@ defmodule GoogleNews do
   @doc """
   Return a list of all articles from the main page of Google News given a country and a language.
   """
-  @spec top_news(list) :: {:ok, Feed.t()} | {:error, term}
+  @spec top_news(list) :: {:ok, Feed.t()} | {:error, Exception.t()}
   def top_news(opts \\ []) do
     {:ok, top_news!(opts)}
   rescue
@@ -59,7 +59,7 @@ defmodule GoogleNews do
   @doc """
   Return a list of all articles from the topic page of Google News given a country and a language.
   """
-  @spec topic_headlines(binary, list) :: {:ok, Feed.t()} | {:error, term}
+  @spec topic_headlines(binary, list) :: {:ok, Feed.t()} | {:error, Exception.t()}
   def topic_headlines(geo, opts \\ []) do
     {:ok, topic_headlines!(geo, opts)}
   rescue
@@ -80,7 +80,7 @@ defmodule GoogleNews do
   @doc """
   Return a list of all articles about a specific geolocation given a country and a language.
   """
-  @spec geo_headlines(binary, list) :: {:ok, Feed.t()} | {:error, term}
+  @spec geo_headlines(binary, list) :: {:ok, Feed.t()} | {:error, Exception.t()}
   def geo_headlines(geo, opts \\ []) do
     {:ok, geo_headlines!(geo, opts)}
   rescue
@@ -109,7 +109,7 @@ defmodule GoogleNews do
   @param boolean encode: When True helps with URL quoting.
   @param binary when: Sets a time range for the artiles that can be found.
   """
-  @spec search(binary, list) :: {:ok, Feed.t()} | {:error, term}
+  @spec search(binary, list) :: {:ok, Feed.t()} | {:error, Exception.t()}
   def search(query, opts \\ []) do
     {:ok, search!(query, opts)}
   rescue
