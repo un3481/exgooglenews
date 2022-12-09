@@ -8,10 +8,9 @@ defmodule GoogleNews.FetchTest do
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
 
-  test "error on fetch, reason: :invalid_uri" do
-    error = %FetchError{
-      reason: :invalid_uri,
-      value: "https://example.com/rss"
+  test "error on fetch, reason: :argument_error (invalid uri host)" do
+    error = %ArgumentError{
+      message: "invalid uri host: \"example.com\""
     }
 
     result =

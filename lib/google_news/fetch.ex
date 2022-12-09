@@ -5,7 +5,6 @@ defmodule GoogleNews.FetchError do
 
   def message(%{reason: reason, value: value}) do
     case reason do
-      :invalid_uri -> "invalid uri: #{inspect(value)}"
       :response_status -> "invalid response status code: #{inspect(value.status)}"
       :request_error -> "error on http client: #{inspect(value)}"
       :invalid_output -> "invalid output from http client: #{inspect(value)}"
@@ -31,8 +30,8 @@ defmodule GoogleNews.Fetch do
 
     uri = URI.parse(text)
 
-    unless uri.authority in [nil, "news.google.com"] do
-      raise(FetchError, reason: :invalid_uri, value: text)
+    unless uri.host in [nil, "news.google.com"] do
+      raise(ArgumentError, message: "invalid uri host: #{inspect(uri.host)}")
     end
 
     %URI{

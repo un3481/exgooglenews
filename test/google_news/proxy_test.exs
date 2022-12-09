@@ -12,7 +12,7 @@ defmodule GoogleNews.ProxyTest do
 
   @url_top_news "#{@base_url}?#{@ceid_en_us}"
 
-  test "error on top_news, reason: :argument_error" do
+  test "error on top_news, reason: :argument_error (using both :proxy and :scraping_bee)" do
     options = [
       proxy: @example_proxy,
       scraping_bee: @example_scraping_bee_token
