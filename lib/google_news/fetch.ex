@@ -138,9 +138,11 @@ defmodule GoogleNews.Fetch do
 
   @doc """
   Retrieve RSS Feed using provided methods.
+
+  @param boolean encode: When True helps with URL quoting.
   """
   @spec fetch!(binary, list) :: binary
-  def fetch!(uri \\ "", opts \\ []) when is_binary(uri) and is_list(opts) do
+  def fetch!(uri, opts \\ []) when is_binary(uri) and is_list(opts) do
     uri
     |> encode(opts)
     |> merge_base()

@@ -26,6 +26,10 @@ defmodule GoogleNews.Search do
 
   @doc """
   Process search query options
+
+  @param binary when: Sets a time range for the artiles.
+  @param binary from: Sets a minimum date for the artiles.
+  @param binary to: Sets a maximum date for the artiles.
   """
   @spec query!(binary, list) :: binary
   def query!(query, opts \\ []) when is_binary(query) and is_list(opts) do

@@ -91,8 +91,9 @@ defmodule GoogleNews do
   @doc """
   Return a list of all articles given a full-text search parameter, a country and a language.
 
-  @param boolean encode: When True helps with URL quoting.
-  @param binary when: Sets a time range for the artiles that can be found.
+  @param binary when: Sets a time range for the artiles.
+  @param binary from: Sets a minimum date for the artiles.
+  @param binary to: Sets a maximum date for the artiles.
   """
   @spec search!(binary, list) :: Feed.t()
   def search!(query, opts \\ []) when is_binary(query) and is_list(opts) do
@@ -106,8 +107,9 @@ defmodule GoogleNews do
   @doc """
   Return a list of all articles given a full-text search parameter, a country and a language.
 
-  @param boolean encode: When True helps with URL quoting.
-  @param binary when: Sets a time range for the artiles that can be found.
+  @param binary when: Sets a time range for the artiles.
+  @param binary from: Sets a minimum date for the artiles.
+  @param binary to: Sets a maximum date for the artiles.
   """
   @spec search(binary, list) :: {:ok, Feed.t()} | {:error, Exception.t()}
   def search(query, opts \\ []) do

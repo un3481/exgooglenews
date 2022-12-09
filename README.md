@@ -90,23 +90,21 @@ end
 
 ```elixir
 # Get top articles from Google News
-{:ok, top} = GoogleNews.top_news()
+iex> {:ok, top} = GoogleNews.top_news()
 ```
 
 ### **Stories by Topic**
 
 ```elixir
 # Get top articles related to the topic 'BUSINESS'
-{:ok, business} = GoogleNews.topic_headlines("Business")
-
+iex> {:ok, business} = GoogleNews.topic_headlines("Business")
 ```
 
 ### **Geolocation Specific Stories**
 
 ```elixir
 # Get top articles in the location of San Francisco
-{:ok, headquaters} = GoogleNews.geo_headlines("San Fran")
-
+iex> {:ok, headquaters} = GoogleNews.geo_headlines("San Fran")
 ```
 
 ### **Stories by a Query Search**
@@ -114,8 +112,7 @@ end
 ```elixir
 # Search for the best matching articles that mention MSFT and 
 # do not mention AAPL (over the past 6 months)
-{:ok, search} = GoogleNews.search("MSFT -APPL", when: "6m")
-
+iex> {:ok, search} = GoogleNews.search("MSFT -APPL", when: "6m")
 ```
 
 ---
@@ -127,8 +124,7 @@ end
 
 ```elixir
 # default 'lang' and 'country' parameters
-{:ok, top} = GoogleNews.top_news(lang: "en", country: "US")
-
+iex> {:ok, top} = GoogleNews.top_news(lang: "en", country: "US")
 ```
 
 Every function can accept `:lang` and `:country` options. 
@@ -149,8 +145,10 @@ For example, for `country: "UA"` (Ukraine), there are 2 languages supported:
 
 ```elixir
 # returns the top stories for current 'lang' and 'country'
-{:ok, top} = GoogleNews.top_news()
+iex> {:ok, top} = GoogleNews.top_news()
 
+iex> top.feed.title
+"Top stories - Google News"
 ```
 
 The returned map contains `feed` and `entries` list of articles found with all data parsed.
@@ -163,8 +161,10 @@ This function gets the top stories for the selected country and language that ar
 
 ```elixir
 # returns top stories for 'buisness' topic
-{:ok, business} = GoogleNews.topic_headlines("business")
+iex> {:ok, business} = GoogleNews.topic_headlines("business")
 
+iex> business.feed.title
+"Business - Latest - Google News"
 ```
 
 The returned map contains `feed` and `entries` list of articles found with all data parsed.
@@ -190,10 +190,9 @@ We have to copy the text after `topics/` and before `?`, then you can use it 
 
 ```elixir
 # custom topic that can be passed as argument to 'topic_headlines' function 
-topic = "CAAqIggKIhxDQkFTRHdvSkwyMHZNREZqY0hsNUVnSmxiaWdBUAE"
+iex> topic = "CAAqIggKIhxDQkFTRHdvSkwyMHZNREZqY0hsNUVnSmxiaWdBUAE"
 
-{:ok, covid} = GoogleNews.topic_headlines(topic)
-
+iex> {:ok, covid} = GoogleNews.topic_headlines(topic)
 ```
 
 **However, be aware that this topic will be unique for each language/country combination.**
@@ -203,13 +202,13 @@ topic = "CAAqIggKIhxDQkFTRHdvSkwyMHZNREZqY0hsNUVnSmxiaWdBUAE"
 ### **Stories by Geolocation**
 
 ```elixir
-{:ok, kyiv} = GoogleNews.geo_headlines("kyiv", lang: "uk", country: "UA")
+iex> {:ok, kyiv} = GoogleNews.geo_headlines("kyiv", lang: "uk", country: "UA")
 # or 
-{:ok, kyiv} = GoogleNews.geo_headlines("kiev", lang: "uk", country: "UA")
+iex> {:ok, kyiv} = GoogleNews.geo_headlines("kiev", lang: "uk", country: "UA")
 # or
-{:ok, kyiv} = GoogleNews.geo_headlines("киев", lang: "uk", country: "UA")
+iex> {:ok, kyiv} = GoogleNews.geo_headlines("киев", lang: "uk", country: "UA")
 # or
-{:ok, kyiv} = GoogleNews.geo_headlines("Київ", lang: "uk", country: "UA")
+iex> {:ok, kyiv} = GoogleNews.geo_headlines("Київ", lang: "uk", country: "UA")
 
 ```
 
@@ -218,10 +217,8 @@ The returned map contains `feed` and `entries` list of articles found with all d
 All of the above variations will return the same feed of the latest news about Kyiv, Ukraine:
 
 ```elixir
-geo.feed.title
-
-# 'Київ - Останні - Google Новини'
-
+iex> geo.feed.title
+"Київ - Останні - Google Новини"
 ```
 
 It is language agnostic, however, it does not guarantee that the feed for any specific place will exist.
@@ -236,8 +233,10 @@ The main (`en`, `US`) Google News client will most likely find the feed about t
 
 ```elixir
 # search for news containing 'boing' from 24 feburary to 15 september
-{:ok, search} = GoogleNews.search("boeing", from: "2022-02-24", to: "2022-09-15")
+iex> {:ok, search} = GoogleNews.search("boeing", from: "2022-02-24", to: "2022-09-15")
 
+iex> search.feed.title
+"\"boeing after:2022-02-24 before:2022-09-15\" - Google News"
 ```
 
 The returned map contains `feed` and `entries` list of articles found with all data parsed.
@@ -246,9 +245,9 @@ Google News search itself is a complex function that has inherited some features
 
 [The official reference on what could be inserted](https://developers.google.com/custom-search/docs/xml_results)
 
-The biggest obstacle that you might have is to write the URL-escaping input. To ease this process, `helper: true` is turned on by default.
+The biggest obstacle that you might have is to write the URL-escaping input. To ease this process, `encode: true` is turned on by default.
 
-`helper` uses `URI.encode` to automatically convert the input.
+`:encode` uses `URI.encode/1` to automatically convert the input.
 
 For example:
 
@@ -279,11 +278,10 @@ Here is an example of those operators.
 * Boolean OR Search [ OR ]
 
 ```elixir
-{:ok, search} = GoogleNews.search("boeing OR airbus")
+iex> {:ok, search} = GoogleNews.search("boeing OR airbus")
 
-search.feed.title
-# "boeing OR airbus" - Google News
-
+iex> earch.feed.title
+"\"boeing OR airbus\" - Google News"
 ```
 
 * Exclude Query Term [-]
@@ -342,14 +340,20 @@ Especially, [Special Query Terms](https://developers.google.com/custom-search/d
 
 ```elixir
 # destructuring return of 'top_news' function into 'feed' and 'entries'
-{:ok, %{feed: feed, entries: entries}} = GoogleNews.top_news()
+iex> {:ok, %{feed: feed, entries: entries}} = GoogleNews.top_news()
 
+iex> feed.__struct__
+GoogleNews.FeedInfo
+
+iex> entry = Enum.at(entries, 0)
+iex> entry.__struct__
+GoogleNews.Entry
 ```
 
-All 4 functions return a `map` that contains 2 items:
+All 4 functions return a `struct` that contains 2 items:
 
 - `feed` - contains the information on the feed metadata
-- `entries` - contains the parsed articles
+- `entries` - contains a list with the parsed articles
 
 Both are inherited from [FeederEx](https://github.com/manukall/feeder_ex/) package. The only change is that each entry under `entries` also contains `sub_articles` which are the similar articles found in the description. Usually, it is non-empty for `top_news()` and `topic_headlines()` feeds.
 
@@ -370,9 +374,9 @@ How to use example:
 
 ```elixir
 # it's a fake API key, do not try to use it
-api_key = "I5SYNPRFZI41WHVQWWUT0GNXFMO104343E7CXFIISR01E2V8ETSMXMJFK1XNKM7FDEEPUPRM0FYAHFF5"
+iex> api_key = "I5SYNPRFZI41WHVQWWUT0GNXFMO104343E7CXFIISR01E2V8ETSMXMJFK1XNKM7FDEEPUPRM0FYAHFF5"
 
-{:ok, top} = GoogleNews.top_news(scraping_bee: api_key)
+iex> {:ok, top} = GoogleNews.top_news(scraping_bee: api_key)
 ```
 
 ---
@@ -387,9 +391,9 @@ How to use example:
 
 ```elixir
 # proxy with scheme 'https', ip '34.91.135.38' and port '80'
-https_proxy = {:https, "34.91.135.38", 80, []}
+iex> https_proxy = {:https, "34.91.135.38", 80, []}
 
-{:ok, top} = GoogleNews.top_news(proxy: https_proxy)
+iex> {:ok, top} = GoogleNews.top_news(proxy: https_proxy)
 ```
 
 ---
@@ -400,41 +404,37 @@ https_proxy = {:https, "34.91.135.38", 80, []}
 ### **Example 1. Search for articles that mention `boeing` and do not mention `airbus`**
 
 ```elixir
-{:ok, search} = GoogleNews.search("boeing -airbus")
+iex> {:ok, search} = GoogleNews.search("boeing -airbus")
 
-search.feed.title
-# "boeing -airbus" - Google News
-
+iex> search.feed.title
+"\"boeing -airbus\" - Google News"
 ```
 
 ### **Example 2. Search for articles that mention `boeing` in title**
 
 ```elixir
-{:ok, search} = GoogleNews.search("intitle:boeing")
+iex> {:ok, search} = GoogleNews.search("intitle:boeing")
 
-search.feed.title
-# "intitle:boeing" - Google News
-
+iex> search.feed.title
+"\"intitle:boeing\" - Google News"
 ```
 
 ### **Example 3. Search for articles that mention `boeing` in title and got published over the past hour**
 
 ```elixir
-{:ok, search} = GoogleNews.search("intitle:boeing", when: "1h")
+iex> {:ok, search} = GoogleNews.search("intitle:boeing", when: "1h")
 
-search.feed.title
-# "intitle:boeing when:1h" - Google News
-
+iex> search.feed.title
+"\"intitle:boeing when:1h\" - Google News"
 ```
 
 ### **Example 4. Search for articles that mention `boeing` or `airbus`**
 
 ```elixir
-{:ok, search} = GoogleNews.search("boeing OR airbus", when: "1h")
+iex> {:ok, search} = GoogleNews.search("boeing OR airbus", when: "1h")
 
-search.feed.title
-# "boeing AND airbus when:1h" - Google News
-
+iex> search.feed.title
+"\"boeing AND airbus when:1h\" - Google News"
 ```
 
 ---
