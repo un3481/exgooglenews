@@ -1,6 +1,8 @@
 defmodule GoogleNews.ProxyTest do
   use ExUnit.Case, async: true
 
+  alias GoogleNews.FetchError
+
   @url_scraping_bee "https://app.scrapingbee.com/api/v1/"
   @example_scraping_bee_token "123456789abc"
   @example_proxy {:http, "localhost", 8899, []}
@@ -31,7 +33,7 @@ defmodule GoogleNews.ProxyTest do
       {:ok, %Req.Response{status: 404, body: :proxy}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404, body: :proxy}
     }
@@ -54,7 +56,7 @@ defmodule GoogleNews.ProxyTest do
       {:ok, %Req.Response{status: 404, body: :scraping_bee}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404, body: :scraping_bee}
     }

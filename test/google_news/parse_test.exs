@@ -1,17 +1,19 @@
 defmodule GoogleNews.ParseTest do
   use ExUnit.Case, async: true
 
+  alias GoogleNews.Feed
+  alias GoogleNews.Parse
   alias GoogleNews.ParseError
 
   test "error on parse, reason: :parser_error (invalid rss 1)" do
-    error = %GoogleNews.ParseError{
+    error = %ParseError{
       reason: :parser_error,
       value: 'Can\'t detect character encoding due to lack of indata'
     }
 
     result =
       try do
-        GoogleNews.Parse.parse!("")
+        Parse.parse!("")
       rescue
         err in [ParseError, ArgumentError] -> err
       end
@@ -20,14 +22,14 @@ defmodule GoogleNews.ParseTest do
   end
 
   test "error on parse, reason: :parser_error (invalid rss 2)" do
-    error = %GoogleNews.ParseError{
+    error = %ParseError{
       reason: :parser_error,
       value: 'Continuation function undefined'
     }
 
     result =
       try do
-        GoogleNews.Parse.parse!("<rss bff65")
+        Parse.parse!("<rss bff65")
       rescue
         err in [ParseError, ArgumentError] -> err
       end
@@ -36,14 +38,14 @@ defmodule GoogleNews.ParseTest do
   end
 
   test "error on parse, reason: :parser_error (invalid rss 3)" do
-    error = %GoogleNews.ParseError{
+    error = %ParseError{
       reason: :parser_error,
       value: '\', " or whitespace expected'
     }
 
     result =
       try do
-        GoogleNews.Parse.parse!("<rss version=\\\"2.0\\\"></rss>")
+        Parse.parse!("<rss version=\\\"2.0\\\"></rss>")
       rescue
         err in [ParseError, ArgumentError] -> err
       end
@@ -52,14 +54,14 @@ defmodule GoogleNews.ParseTest do
   end
 
   test "error on parse, reason: :parser_error (invalid rss 4)" do
-    error = %GoogleNews.ParseError{
+    error = %ParseError{
       reason: :parser_error,
       value: 'EndTag: :rss, does not match StartTag'
     }
 
     result =
       try do
-        GoogleNews.Parse.parse!("<rss><channel></rss>")
+        Parse.parse!("<rss><channel></rss>")
       rescue
         err in [ParseError, ArgumentError] -> err
       end
@@ -68,11 +70,11 @@ defmodule GoogleNews.ParseTest do
   end
 
   test "ok on parse (parsing empty rss)" do
-    feed = %GoogleNews.Feed{}
+    feed = %Feed{}
 
     result =
       try do
-        GoogleNews.Parse.parse!("<rss version=\"2.0\"></rss>")
+        Parse.parse!("<rss version=\"2.0\"></rss>")
       rescue
         err in [ParseError, ArgumentError] -> err
       end

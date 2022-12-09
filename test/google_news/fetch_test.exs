@@ -1,20 +1,22 @@
 defmodule GoogleNews.FetchTest do
   use ExUnit.Case, async: true
 
+  alias GoogleNews.{Feed, FeedInfo, Entry}
+  alias GoogleNews.{Fetch, Parse}
   alias GoogleNews.{FetchError, ParseError}
 
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
 
   test "error on fetch, reason: :invalid_uri" do
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :invalid_uri,
       value: "https://example.com/rss"
     }
 
     result =
       try do
-        GoogleNews.Fetch.fetch!("https://example.com/rss")
+        Fetch.fetch!("https://example.com/rss")
       rescue
         err in [FetchError, ArgumentError] -> err
       end
@@ -30,14 +32,14 @@ defmodule GoogleNews.FetchTest do
       {:error, :foo_bar}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :request_error,
       value: :foo_bar
     }
 
     result =
       try do
-        GoogleNews.Fetch.fetch!("")
+        Fetch.fetch!("")
       rescue
         err in [FetchError, ArgumentError] -> err
       end
@@ -53,14 +55,14 @@ defmodule GoogleNews.FetchTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
     result =
       try do
-        GoogleNews.Fetch.fetch!("http://news.google.com/rss/example")
+        Fetch.fetch!("http://news.google.com/rss/example")
       rescue
         err in [FetchError, ArgumentError] -> err
       end
@@ -76,14 +78,14 @@ defmodule GoogleNews.FetchTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
     result =
       try do
-        GoogleNews.Fetch.fetch!("example/foo")
+        Fetch.fetch!("example/foo")
       rescue
         err in [FetchError, ArgumentError] -> err
       end
@@ -99,14 +101,14 @@ defmodule GoogleNews.FetchTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
     result =
       try do
-        GoogleNews.Fetch.fetch!("rss/example/bar")
+        Fetch.fetch!("rss/example/bar")
       rescue
         err in [FetchError, ArgumentError] -> err
       end
@@ -122,14 +124,14 @@ defmodule GoogleNews.FetchTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
 
     result =
       try do
-        GoogleNews.Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")
+        Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")
       rescue
         err in [FetchError, ArgumentError] -> err
       end
@@ -152,23 +154,23 @@ defmodule GoogleNews.FetchTest do
     result =
       try do
         "foo/bar"
-        |> GoogleNews.Fetch.fetch!()
-        |> GoogleNews.Parse.parse!()
+        |> Fetch.fetch!()
+        |> Parse.parse!()
       rescue
         err in [FetchError, ParseError, ArgumentError] -> err
       end
 
-    assert result.__struct__ == GoogleNews.Feed
+    assert result.__struct__ == Feed
 
-    %GoogleNews.Feed{feed: feed, entries: entries} = result
+    %Feed{feed: feed, entries: entries} = result
 
-    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.__struct__ == FeedInfo
     assert feed.title == "Google News"
     assert Enum.count(entries) == 1
 
     entry = Enum.at(entries, 0)
 
-    assert entry.__struct__ == GoogleNews.Entry
+    assert entry.__struct__ == Entry
     assert entry.title == "This feed is not available."
   end
 end

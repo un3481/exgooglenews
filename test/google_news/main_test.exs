@@ -1,6 +1,9 @@
 defmodule GoogleNews.MainTest do
   use ExUnit.Case, async: true
 
+  alias GoogleNews.{Feed, FeedInfo, Entry, SubArticle}
+  alias GoogleNews.FetchError
+
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
 
@@ -17,7 +20,7 @@ defmodule GoogleNews.MainTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
@@ -37,17 +40,17 @@ defmodule GoogleNews.MainTest do
        }}
     end)
 
-    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} = GoogleNews.top_news()
+    {:ok, %Feed{feed: feed, entries: entries}} = GoogleNews.top_news()
 
-    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.__struct__ == FeedInfo
     assert feed.title == "Top stories - Google News"
     assert Enum.count(entries) == 37
 
     Enum.each(entries, fn entry ->
-      assert entry.__struct__ == GoogleNews.Entry
+      assert entry.__struct__ == Entry
 
       Enum.each(entry.sub_articles, fn sub_article ->
-        assert sub_article.__struct__ == GoogleNews.SubArticle
+        assert sub_article.__struct__ == SubArticle
       end)
     end)
   end
@@ -60,7 +63,7 @@ defmodule GoogleNews.MainTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
@@ -80,17 +83,17 @@ defmodule GoogleNews.MainTest do
        }}
     end)
 
-    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} = GoogleNews.topic_headlines("Sports")
+    {:ok, %Feed{feed: feed, entries: entries}} = GoogleNews.topic_headlines("Sports")
 
-    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.__struct__ == FeedInfo
     assert feed.title == "Sports - Latest - Google News"
     assert Enum.count(entries) == 70
 
     Enum.each(entries, fn entry ->
-      assert entry.__struct__ == GoogleNews.Entry
+      assert entry.__struct__ == Entry
 
       Enum.each(entry.sub_articles, fn sub_article ->
-        assert sub_article.__struct__ == GoogleNews.SubArticle
+        assert sub_article.__struct__ == SubArticle
       end)
     end)
   end
@@ -103,7 +106,7 @@ defmodule GoogleNews.MainTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
@@ -123,18 +126,17 @@ defmodule GoogleNews.MainTest do
        }}
     end)
 
-    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} =
-      GoogleNews.geo_headlines("Los Angeles")
+    {:ok, %Feed{feed: feed, entries: entries}} = GoogleNews.geo_headlines("Los Angeles")
 
-    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.__struct__ == FeedInfo
     assert feed.title == "Los Angeles - Latest - Google News"
     assert Enum.count(entries) == 63
 
     Enum.each(entries, fn entry ->
-      assert entry.__struct__ == GoogleNews.Entry
+      assert entry.__struct__ == Entry
 
       Enum.each(entry.sub_articles, fn sub_article ->
-        assert sub_article.__struct__ == GoogleNews.SubArticle
+        assert sub_article.__struct__ == SubArticle
       end)
     end)
   end
@@ -163,7 +165,7 @@ defmodule GoogleNews.MainTest do
       {:ok, %Req.Response{status: 404}}
     end)
 
-    error = %GoogleNews.FetchError{
+    error = %FetchError{
       reason: :response_status,
       value: %Req.Response{status: 404}
     }
@@ -183,18 +185,17 @@ defmodule GoogleNews.MainTest do
        }}
     end)
 
-    {:ok, %GoogleNews.Feed{feed: feed, entries: entries}} =
-      GoogleNews.search("boeing", from: "2022-02-24")
+    {:ok, %Feed{feed: feed, entries: entries}} = GoogleNews.search("boeing", from: "2022-02-24")
 
-    assert feed.__struct__ == GoogleNews.FeedInfo
+    assert feed.__struct__ == FeedInfo
     assert feed.title == "\"boeing after:2022-02-24\" - Google News"
     assert Enum.count(entries) == 97
 
     Enum.each(entries, fn entry ->
-      assert entry.__struct__ == GoogleNews.Entry
+      assert entry.__struct__ == Entry
 
       Enum.each(entry.sub_articles, fn sub_article ->
-        assert sub_article.__struct__ == GoogleNews.SubArticle
+        assert sub_article.__struct__ == SubArticle
       end)
     end)
   end
