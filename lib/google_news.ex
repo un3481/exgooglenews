@@ -2,7 +2,6 @@ defmodule GoogleNews do
   @moduledoc """
 
   An Elixir wrapper of the Google News RSS feed.
-
   Top stories, topic related news feeds, geolocation news feed, and an extensive full text search feed.
 
   GoogleNews is composed of three main pieces:
