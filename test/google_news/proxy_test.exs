@@ -27,8 +27,13 @@ defmodule GoogleNews.ProxyTest do
   end
 
   test "error on top_news, reason: :argument_error (invalid :proxy)" do
-    error = %ArgumentError{
-      message: "invalid proxy: \"http://localhost:8899\""
+    ReqMock
+    |> expect(:get, fn @url_top_news, [connect_options: [proxy: "http://localhost:8899"]] ->
+      raise(CaseClauseError, term: {:ok, "http://localhost:8899"})
+    end)
+
+    error = %CaseClauseError{
+      term: {:ok, "http://localhost:8899"}
     }
 
     assert {:error, error} == GoogleNews.top_news(proxy: "http://localhost:8899")

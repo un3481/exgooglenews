@@ -90,14 +90,6 @@ defmodule GoogleNews.Fetch do
     Application.get_env(:google_news, :http_client, Req)
   end
 
-  # Check if proxy is valid
-  defp valid_proxy?({scheme, address, port, opts})
-       when is_atom(scheme) and is_binary(address) and is_integer(port) and is_list(opts) do
-    true
-  end
-
-  defp valid_proxy?(_), do: false
-
   # Send request to uri using proxy or scraping bee.
   defp request(_, proxy, scraping_bee) when not is_nil(proxy) and not is_nil(scraping_bee) do
     raise(ArgumentError, message: "use either :proxy or :scraping_bee, not both")
@@ -110,10 +102,6 @@ defmodule GoogleNews.Fetch do
   end
 
   defp request(uri, proxy, nil) when not is_nil(proxy) do
-    unless valid_proxy?(proxy) do
-      raise(ArgumentError, message: "invalid proxy: #{inspect(proxy)}")
-    end
-
     args = [uri, [connect_options: [proxy: proxy]]]
 
     http_client() |> apply(:get, args)
