@@ -1,7 +1,7 @@
 defmodule GoogleNews.ParseTest do
   use ExUnit.Case, async: true
 
-  alias GoogleNews.Feed
+  alias GoogleNews.{Feed, FeedInfo, Entry}
   alias GoogleNews.Parse
   alias GoogleNews.ParseError
 
@@ -63,20 +63,35 @@ defmodule GoogleNews.ParseTest do
       try do
         Parse.parse!("<rss><channel></rss>")
       rescue
-        err in [ParseError, ArgumentError] -> err
+        err in ParseError -> err
       end
 
     assert error == result
   end
 
   test "ok on parse (parsing empty rss)" do
-    result =
-      try do
-        Parse.parse!("<rss version=\"2.0\"></rss>")
-      rescue
-        err in [ParseError, ArgumentError] -> err
-      end
+    result = Parse.parse!("<rss version=\"2.0\"></rss>")
 
     assert result == %Feed{}
+  end
+
+  test "ok on parse (parsing feed not-found)" do
+    result =
+      "test/documents/not_found.rss"
+      |> File.read!()
+      |> Parse.parse!()
+
+    assert result.__struct__ == Feed
+
+    %Feed{feed: feed, entries: entries} = result
+
+    assert feed.__struct__ == FeedInfo
+    assert feed.title == "Google News"
+    assert Enum.count(entries) == 1
+
+    entry = Enum.at(entries, 0)
+
+    assert entry.__struct__ == Entry
+    assert entry.title == "This feed is not available."
   end
 end

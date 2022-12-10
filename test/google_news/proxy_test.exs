@@ -37,12 +37,12 @@ defmodule GoogleNews.ProxyTest do
   test "error on top_news, reason: :response_status (using :proxy)" do
     ReqMock
     |> expect(:get, fn @url_top_news, [connect_options: [proxy: @example_proxy]] ->
-      {:ok, %Req.Response{status: 404, body: :proxy}}
+      {:ok, %Req.Response{status: 404, body: "proxy test"}}
     end)
 
     error = %FetchError{
       reason: :response_status,
-      value: %Req.Response{status: 404, body: :proxy}
+      value: %Req.Response{status: 404, body: "proxy test"}
     }
 
     assert {:error, error} == GoogleNews.top_news(proxy: @example_proxy)
@@ -68,13 +68,13 @@ defmodule GoogleNews.ProxyTest do
              url: @url_top_news
            }
          ] ->
-        {:ok, %Req.Response{status: 404, body: :scraping_bee}}
+        {:ok, %Req.Response{status: 404, body: "scraping_bee test"}}
       end
     )
 
     error = %FetchError{
       reason: :response_status,
-      value: %Req.Response{status: 404, body: :scraping_bee}
+      value: %Req.Response{status: 404, body: "scraping_bee test"}
     }
 
     assert {:error, error} == GoogleNews.top_news(scraping_bee: @example_scraping_bee_token)

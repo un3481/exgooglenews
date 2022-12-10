@@ -2,9 +2,8 @@ defmodule GoogleNews.FetchTest do
   use ExUnit.Case, async: true
   import Mox
 
-  alias GoogleNews.{Feed, FeedInfo, Entry}
-  alias GoogleNews.{Fetch, Parse}
-  alias GoogleNews.{FetchError, ParseError}
+  alias GoogleNews.Fetch
+  alias GoogleNews.FetchError
 
   @base_url "https://news.google.com/rss"
   @ceid_en_us "ceid=US%3Aen&hl=en&gl=US"
@@ -18,7 +17,7 @@ defmodule GoogleNews.FetchTest do
       try do
         Fetch.fetch!("https://example.com/rss")
       rescue
-        err in [FetchError, ArgumentError] -> err
+        err in ArgumentError -> err
       end
 
     assert error == result
@@ -26,142 +25,101 @@ defmodule GoogleNews.FetchTest do
 
   test "error on fetch, reason: :request_error" do
     ReqMock
-    |> expect(:get, fn "#{@base_url}?#{@ceid_en_us}", [] ->
-      {:error, :foo_bar}
+    |> expect(:get, fn "#{@base_url}/foo?#{@ceid_en_us}", [] ->
+      {:error, :test}
     end)
 
     error = %FetchError{
       reason: :request_error,
-      value: :foo_bar
+      value: :test
     }
 
     result =
       try do
-        Fetch.fetch!("")
+        Fetch.fetch!("foo")
       rescue
-        err in [FetchError, ArgumentError] -> err
+        err in FetchError -> err
       end
 
     assert error == result
   end
 
-  test "error on fetch, reason: :response_status (building url 1)" do
+  test "error on fetch, reason: :response_status" do
+    ReqMock
+    |> expect(:get, fn "#{@base_url}/foo/bar?#{@ceid_en_us}", [] ->
+      {:ok, %Req.Response{status: 404}}
+    end)
+
+    error = %FetchError{
+      reason: :response_status,
+      value: %Req.Response{status: 404}
+    }
+
+    result =
+      try do
+        Fetch.fetch!("foo/bar")
+      rescue
+        err in FetchError -> err
+      end
+
+    assert error == result
+  end
+
+  test "ok on fetch (building url 1)" do
     ReqMock
     |> expect(:get, fn "http://news.google.com/rss/example?#{@ceid_en_us}", [] ->
-      {:ok, %Req.Response{status: 404}}
+      {:ok, %Req.Response{status: 200, body: "<rss></rss>"}}
     end)
 
-    error = %FetchError{
-      reason: :response_status,
-      value: %Req.Response{status: 404}
-    }
+    result = Fetch.fetch!("http://news.google.com/rss/example")
 
-    result =
-      try do
-        Fetch.fetch!("http://news.google.com/rss/example")
-      rescue
-        err in [FetchError, ArgumentError] -> err
-      end
-
-    assert error == result
+    assert result == "<rss></rss>"
   end
 
-  test "error on fetch, reason: :response_status (building url 2)" do
+  test "ok on fetch (building url 2)" do
     ReqMock
     |> expect(:get, fn "#{@base_url}/example/foo?#{@ceid_en_us}", [] ->
-      {:ok, %Req.Response{status: 404}}
+      {:ok, %Req.Response{status: 200, body: "<rss></rss>"}}
     end)
 
-    error = %FetchError{
-      reason: :response_status,
-      value: %Req.Response{status: 404}
-    }
+    result = Fetch.fetch!("example/foo")
 
-    result =
-      try do
-        Fetch.fetch!("example/foo")
-      rescue
-        err in [FetchError, ArgumentError] -> err
-      end
-
-    assert error == result
+    assert result == "<rss></rss>"
   end
 
-  test "error on fetch, reason: :response_status (building url 3)" do
+  test "ok on fetch (building url 3)" do
     ReqMock
     |> expect(:get, fn "#{@base_url}/example/bar?#{@ceid_en_us}", [] ->
-      {:ok, %Req.Response{status: 404}}
+      {:ok, %Req.Response{status: 200, body: "<rss></rss>"}}
     end)
 
-    error = %FetchError{
-      reason: :response_status,
-      value: %Req.Response{status: 404}
-    }
+    result = Fetch.fetch!("rss/example/bar")
 
-    result =
-      try do
-        Fetch.fetch!("rss/example/bar")
-      rescue
-        err in [FetchError, ArgumentError] -> err
-      end
-
-    assert error == result
+    assert result == "<rss></rss>"
   end
 
-  test "error on fetch, reason: :response_status (building url 4)" do
+  test "ok on fetch (building url 4)" do
     ReqMock
     |> expect(
       :get,
       fn "#{@base_url}/example?foo=42&bar=test&ex=foo%3Abar&#{@ceid_en_us}", [] ->
-        {:ok, %Req.Response{status: 404}}
+        {:ok, %Req.Response{status: 200, body: "<rss></rss>"}}
       end
     )
 
-    error = %FetchError{
-      reason: :response_status,
-      value: %Req.Response{status: 404}
-    }
+    result = Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")
 
-    result =
-      try do
-        Fetch.fetch!("example?foo=42&bar=test&ex=foo:bar")
-      rescue
-        err in [FetchError, ArgumentError] -> err
-      end
-
-    assert error == result
+    assert result == "<rss></rss>"
   end
 
-  test "ok on fetch (fetching non-existent feed)" do
+  test "ok on fetch (custom language)" do
     ReqMock
-    |> expect(:get, fn "#{@base_url}/foo/bar?#{@ceid_en_us}", [] ->
-      {:ok,
-       %Req.Response{
-         status: 200,
-         body: File.read!("test/documents/not_found.rss")
-       }}
+    |> expect(:get, fn "#{@base_url}/example?ceid=UA%3Auk&hl=uk&gl=UA", [] ->
+      {:ok, %Req.Response{status: 200, body: "<rss></rss>"}}
     end)
 
-    result =
-      try do
-        "foo/bar"
-        |> Fetch.fetch!()
-        |> Parse.parse!()
-      rescue
-        err in [FetchError, ParseError, ArgumentError] -> err
-      end
+    result = Fetch.fetch!("rss/example", lang: "uk", country: "UA")
 
-    assert result.__struct__ == Feed
-
-    %Feed{feed: feed, entries: entries} = result
-
-    assert feed.__struct__ == FeedInfo
-    assert feed.title == "Google News"
-    assert Enum.count(entries) == 1
-
-    entry = Enum.at(entries, 0)
-
-    assert entry.__struct__ == Entry
-    assert entry.title == "This feed is not available."
+    assert result == "<rss></rss>"
   end
 end
