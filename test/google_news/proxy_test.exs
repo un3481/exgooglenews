@@ -26,6 +26,14 @@ defmodule GoogleNews.ProxyTest do
     assert {:error, error} == GoogleNews.top_news(options)
   end
 
+  test "error on top_news, reason: :argument_error (invalid :proxy)" do
+    error = %ArgumentError{
+      message: "invalid proxy: \"http://localhost:8899\""
+    }
+
+    assert {:error, error} == GoogleNews.top_news(proxy: "http://localhost:8899")
+  end
+
   test "error on top_news, reason: :response_status (using :proxy)" do
     ReqMock
     |> expect(:get, fn @url_top_news, [connect_options: [proxy: @example_proxy]] ->
@@ -38,6 +46,14 @@ defmodule GoogleNews.ProxyTest do
     }
 
     assert {:error, error} == GoogleNews.top_news(proxy: @example_proxy)
+  end
+
+  test "error on top_news, reason: :argument_error (invalid :scraping_bee)" do
+    error = %ArgumentError{
+      message: "invalid scraping_bee token: 1234"
+    }
+
+    assert {:error, error} == GoogleNews.top_news(scraping_bee: 1234)
   end
 
   test "error on top_news, reason: :response_status (using :scraping_bee)" do

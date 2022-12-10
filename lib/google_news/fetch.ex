@@ -90,24 +90,40 @@ defmodule GoogleNews.Fetch do
     Application.get_env(:google_news, :http_client, Req)
   end
 
+  # Check if proxy is valid
+  defp valid_proxy?({scheme, address, port, opts})
+       when is_atom(scheme) and is_binary(address) and is_integer(port) and is_list(opts) do
+    true
+  end
+
+  defp valid_proxy?(_), do: false
+
   # Send request to uri using proxy or scraping bee.
+  defp request(_, proxy, scraping_bee) when not is_nil(proxy) and not is_nil(scraping_bee) do
+    raise(ArgumentError, message: "use either :proxy or :scraping_bee, not both")
+  end
+
   defp request(uri, nil, nil) do
     args = [uri, []]
 
     http_client() |> apply(:get, args)
   end
 
-  defp request(_, proxy, scraping_bee) when not is_nil(proxy) and not is_nil(scraping_bee) do
-    raise(ArgumentError, message: "use either :proxy or :scraping_bee, not both")
-  end
-
   defp request(uri, proxy, nil) when not is_nil(proxy) do
+    unless valid_proxy?(proxy) do
+      raise(ArgumentError, message: "invalid proxy: #{inspect(proxy)}")
+    end
+
     args = [uri, [connect_options: [proxy: proxy]]]
 
     http_client() |> apply(:get, args)
   end
 
   defp request(uri, nil, scraping_bee) when not is_nil(scraping_bee) do
+    unless is_binary(scraping_bee) do
+      raise(ArgumentError, message: "invalid scraping_bee token: #{inspect(scraping_bee)}")
+    end
+
     args = [
       "https://app.scrapingbee.com/api/v1/",
       [
@@ -151,7 +167,7 @@ defmodule GoogleNews.Fetch do
     * `:proxy` - Mint HTTP/1 proxy settings, a `{schema, address, port, options}` tuple.
                  See `Mint.HTTP.connect/4` for more information.
 
-    * `:scraping_bee` - A token to be passed to the ScrapingBee API if this option is selected.
+    * `:scraping_bee` - a token to be sent to the ScrapingBee API if this option is selected.
 
   ## Examples
 
@@ -171,7 +187,7 @@ defmodule GoogleNews.Fetch do
       "..."
 
   """
-  @spec fetch!(binary, list) :: binary
+  @spec fetch!(binary, options :: keyword()) :: binary
   def fetch!(uri, opts \\ []) when is_binary(uri) and is_list(opts) do
     uri
     |> encode(opts)

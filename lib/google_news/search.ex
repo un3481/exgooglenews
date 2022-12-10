@@ -6,14 +6,14 @@ defmodule GoogleNews.Search do
   """
 
   # validate when parameter
-  defp is_when(value) do
-    unless is_binary(value) do
-      raise(ArgumentError,
-        message: "invalid option, ':when' is not a string: #{inspect(value)}"
-      )
-    end
-
+  defp is_when(value) when is_binary(value) do
     value
+  end
+
+  defp is_when(value) do
+    raise(ArgumentError,
+      message: "invalid option, ':when' is not a string: #{inspect(value)}"
+    )
   end
 
   # Validate date parameter
@@ -69,7 +69,7 @@ defmodule GoogleNews.Search do
       "intitle:boeing when:3d"
 
   """
-  @spec query!(binary, list) :: binary
+  @spec query!(binary, options :: keyword()) :: binary
   def query!(query, opts \\ []) when is_binary(query) and is_list(opts) do
     reduce(query, opts[:when], opts[:from], opts[:to])
   end

@@ -99,7 +99,7 @@ defmodule GoogleNews do
   def top_news(opts \\ []) do
     {:ok, top_news!(opts)}
   rescue
-    error in [FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError, FunctionClauseError] ->
       {:error, error}
   end
 
@@ -161,7 +161,7 @@ defmodule GoogleNews do
   def topic_headlines(geo, opts \\ []) do
     {:ok, topic_headlines!(geo, opts)}
   rescue
-    error in [FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError, FunctionClauseError] ->
       {:error, error}
   end
 
@@ -216,7 +216,7 @@ defmodule GoogleNews do
   def geo_headlines(geo, opts \\ []) do
     {:ok, geo_headlines!(geo, opts)}
   rescue
-    error in [FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError, FunctionClauseError] ->
       {:error, error}
   end
 
@@ -273,7 +273,7 @@ defmodule GoogleNews do
   def search(query, opts \\ []) do
     {:ok, search!(query, opts)}
   rescue
-    error in [FetchError, ParseError, ArgumentError] ->
+    error in [FetchError, ParseError, ArgumentError, FunctionClauseError] ->
       {:error, error}
   end
 end
