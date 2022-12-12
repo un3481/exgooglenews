@@ -76,7 +76,7 @@ The package can be installed by adding `google_news` to your list of dependencie
 ```elixir
 def deps do
   [
-    {:google_news, "~> 0.1.0"}
+    {:google_news, git: "https://github.com/un3481/exgooglenews"}
   ]
 end
 ```
