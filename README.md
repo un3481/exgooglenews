@@ -1,8 +1,9 @@
 
 [![CI](https://github.com/un3481/exgooglenews/actions/workflows/CI.yml/badge.svg)](https://github.com/un3481/exgooglenews/actions/workflows/CI.yml) 
-/*
+
+<!--
 [![Hex pm](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hex.pm/packages/google_news) [![Hexdocs.pm](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/google_news/) 
-*/
+-->
 
 # GoogleNews
 If Google News had an Elixir library
