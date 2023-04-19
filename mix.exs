@@ -29,7 +29,10 @@ defmodule GoogleNews.MixProject do
 
   defp deps do
     [
-      {:req, "~> 0.3.2"},
+      {:req, "~> 0.3.2",
+       github: "crova/req",
+       branch: "add-option-to-silence-logging-from-follow-redirect-step",
+       override: true},
       {:feeder_ex, "~> 1.1"},
       {:floki, "~> 0.33"},
 

@@ -91,14 +91,16 @@ defmodule GoogleNews.Fetch do
   end
 
   # Send request to uri using proxy or scraping bee.
-  defp request(_, proxy, scraping_bee) when not is_nil(proxy) and not is_nil(scraping_bee) do
+  defp request(_, proxy, scraping_bee)
+       when not is_nil(proxy) and not is_nil(scraping_bee) do
     raise(ArgumentError, message: "use either :proxy or :scraping_bee, not both")
   end
 
   defp request(uri, nil, nil) do
-    args = [uri, []]
+    http_client = http_client()
+    args = if http_client == Req, do: [uri, [log_redirects: false]], else: [uri, []]
 
-    http_client() |> apply(:get, args)
+    http_client |> apply(:get, args)
   end
 
   defp request(uri, proxy, nil) when not is_nil(proxy) do
